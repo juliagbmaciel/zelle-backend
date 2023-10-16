@@ -1,6 +1,7 @@
 from django.db import models
 from django.contrib.auth.models import AbstractUser
 from django.contrib.auth.base_user import BaseUserManager
+from django.contrib.auth import get_user_model
 
 
 
@@ -33,58 +34,161 @@ class User(AbstractUser):
     REQUIRED_FIELDS = ["username"]
 
     def __str__(self):
-        return self.username
+        return self.cpf
 
 
-# class Address(models.Model):
-#     street = models.CharField(max_length=100)
-#     neighborhood = models.CharField(max_length=75)
-#     city = models.CharField(max_length=75)
-#     state = models.CharField(max_length=2)
-#     zip_code = models.CharField(max_length=10)
+class Address(models.Model):
+    street = models.CharField(max_length=100)
+    neighborhood = models.CharField(max_length=75)
+    city = models.CharField(max_length=75)
+    state = models.CharField(max_length=2)
+    zip_code = models.CharField(max_length=10)
 
-#     def __str__(self):
-#         return f"Cep {self.cep}"
+    def __str__(self):
+        return f"Cep {self.cep}"
     
 
-# class Client(models.Model):
-#     address_code = models.ForeignKey(Address, on_delete=models.SET_NULL, blank=True, null=True)
-#     name = models.CharField(max_length=100, null=False)
-#     social_name = models.CharField(max_length=100, blank=True, null=True)
-#     picture = models.CharField(max_length=100, blank=True, null=True)
-#     birthdate = models.DateField()
+class Client(models.Model):
+    address_code = models.ForeignKey(Address, on_delete=models.SET_NULL, blank=True, null=True)
+    name = models.CharField(max_length=100, null=False)
+    user = models.ForeignKey(get_user_model(), on_delete=models.CASCADE, blank=True, null=True)
+    social_name = models.CharField(max_length=100, blank=True, null=True)
+    picture = models.CharField(max_length=100, blank=True, null=True)
+    birthdate = models.DateField()
 
-
-
-# class ClientPhysical(models.Model):
-#     client = models.OneToOneField('Client', on_delete=models.CASCADE)
-#     user_cpf = models.ForeignKey(User, on_delete=models.CASCADE)
-#     rg = models.CharField(max_length=18, blank=False)
+    class Meta:
+        verbose_name = "Base Client"
+        verbose_name_plural = "Base Clients"
     
+    def __str__(self):
+        return f"{self.name}"
+
+
+class ClientPhysical(models.Model):
+    client = models.OneToOneField('Client', on_delete=models.CASCADE)
+    rg = models.CharField(max_length=18, blank=False)
+
+    class Meta:
+        verbose_name = "Physical Client"
+        verbose_name_plural = "Physical Clients"
+
+    def __str__(self):
+        return self.client
+
+
+class ClientLegal(models.Model):
+    client = models.OneToOneField('Client', on_delete=models.CASCADE)
+    state_registration = models.CharField(max_length=200, blank=True)
+    municipal_registration = models.CharField(max_length=200, blank=True)
+
+    class Meta:
+        verbose_name = "Legal Client"
+        verbose_name_plural = "Legal Clients"
+    
+    def __str__(self):
+        return self.client
     
 
-# class Account(models.Model):
-#     balance = models.FloatField(null=False)
-#     agency = models.CharField(max_length=10, primary_key=True)
-#     number = models.CharField(max_length=25, null=False)
-#     type = models.CharField(max_length=20, null=False)
-#     client = models.ManyToManyField('Client')
-#     limit = models.DecimalField(max_digits=8, decimal_places=2)
-#     ativa = models.BooleanField()
+class Account(models.Model):
+    balance = models.FloatField()
+    agency = models.CharField(max_length=10, primary_key=True)
+    number = models.CharField(max_length=25, null=False)
+    type = models.CharField(max_length=20, null=False)
+    client = models.ManyToManyField('Client')
+    limit = models.DecimalField(max_digits=20, decimal_places=2)
+    active = models.BooleanField()
 
-#     class Meta:
-#         verbose_name = "Account"
-#         verbose_name_plural = "Accounts"
+    class Meta:
+        verbose_name = "Account"
+        verbose_name_plural = "Accounts"
 
-#     def __str__(self):
-#         return f"Agência {self.agency}"
-
-
+    def __str__(self):
+        return f"Agência {self.agency}"
 
 
+class Contact(models.Model):
+    client = models.ForeignKey(Client, on_delete=models.SET_NULL, null=True)
+    number = models.CharField(max_length=20,  null=True, blank=True)
+    ramal = models.CharField(max_length=25,  null=True, blank=True)
+    email = models.EmailField( null=True, blank=True)
+    observation = models.CharField(max_length=50, null=True, blank=True)
+
+    class Meta:
+        verbose_name = "Contact"
+        verbose_name_plural = "Contacts"
+
+    def __str__(self):
+        return self.number
+
+class Investment(models.Model):
+    account = models.ForeignKey(Account, on_delete=models.CASCADE)
+    type = models.CharField(max_length=30)
+    contribution = models.DecimalField(max_digits=20, decimal_places=2)
+    admin_tax = models.FloatField()
+    deadline = models.CharField(max_length=20)
+    risk_degree = models.CharField(max_length=5)
+    profitability = models.DecimalField(max_digits=20, decimal_places=2)
+    finished = models.BooleanField(default=False)
+
+    class Meta:
+        verbose_name = "Investment"
+        verbose_name_plural = "Investments"
+
+    def __str__(self):
+        return f"Investimento da conta com {self.account}"
+
+class Loan(models.Model):
+    account = models.ForeignKey(Account, on_delete=models.CASCADE)
+    request_date = models.DateField(auto_now_add=True)
+    amount_requested = models.DecimalField(max_digits=20, decimal_places=2)
+    cash_interest = models.FloatField()
+    approved = models.BooleanField()
+    number_installments = models.IntegerField(null=True, blank=True)
+    approval_date = models.DateField(null=True, blank=True)
+    observation = models.CharField(max_length=200, null=True, blank=True)
+
+    class Meta:
+        verbose_name = "Loan"
+        verbose_name_plural = "Loans"
+    
+    def __str__(self):
+        return str(self.id)
 
 
+class LoanInstallment(models.Model):
+    loan = models.ForeignKey(Loan, on_delete=models.CASCADE)
+    installment_number = models.IntegerField()
+    due_date = models.DateField()
+    installment_value = models.DecimalField(max_digits=20, decimal_places=2)
+    pay_day = models.DateField()
+    amount_paid = models.DecimalField(max_digits=20, decimal_places=2, blank=True, null=True)
+    
+
+class Card(models.Model):
+    account = models.ForeignKey(Account, on_delete=models.CASCADE)
+    number = models.CharField(max_length=30)
+    cvv = models.CharField(max_length=5)
+    expiration = models.DateField()
+    banner = models.CharField(max_length=20)
+    situation = models.CharField(max_length=20)
 
 
+    class Meta:
+        verbose_name = "Card"
+        verbose_name_plural = "Cards"
+    
+    def __str__(self):
+        return self.number
 
+class Movement(models.Model):
+    card = models.ForeignKey(Card, on_delete=models.CASCADE)
+    date_time = models.DateTimeField(auto_now=True)
+    operation = models.CharField(max_length=20)
+    value = models.DecimalField(max_digits=20, decimal_places=2)
 
+    class Meta:
+        verbose_name = "Card Movement"
+        verbose_name_plural = "Card Movements"
+    
+    def __str__(self):
+        return f"Valor de {self.value} no cartao com n° {self.card}"

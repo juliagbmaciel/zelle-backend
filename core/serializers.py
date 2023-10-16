@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import User
+from .models import User, ClientPhysical
 
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
@@ -17,3 +17,8 @@ class UserSerializer(serializers.ModelSerializer):
         user.set_password(validated_data['password'])
         user.save()
         return user
+
+class ClientPhysicalSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ClientPhysical
+        fields = "__all__"
