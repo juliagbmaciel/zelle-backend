@@ -34,7 +34,7 @@ class User(AbstractUser):
     REQUIRED_FIELDS = ["username"]
 
     def __str__(self):
-        return self.cpf
+        return self.username
 
 
 class Address(models.Model):
@@ -51,7 +51,7 @@ class Address(models.Model):
 class Client(models.Model):
     address_code = models.ForeignKey(Address, on_delete=models.SET_NULL, blank=True, null=True)
     name = models.CharField(max_length=100, null=False)
-    user = models.ForeignKey(get_user_model(), on_delete=models.CASCADE, blank=True, null=True)
+    user = models.OneToOneField(get_user_model(), on_delete=models.CASCADE, blank=True, null=True)
     social_name = models.CharField(max_length=100, blank=True, null=True)
     picture = models.CharField(max_length=100, blank=True, null=True)
     birthdate = models.DateField()
@@ -73,7 +73,7 @@ class ClientPhysical(models.Model):
         verbose_name_plural = "Physical Clients"
 
     def __str__(self):
-        return self.client
+        return str(self.client)
 
 
 class ClientLegal(models.Model):
