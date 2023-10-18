@@ -171,7 +171,7 @@ class Card(models.Model):
     expiration = models.DateField()
     banner = models.CharField(max_length=20)
     situation = models.CharField(max_length=20)
-
+    limit = models.DecimalField(max_digits=20, decimal_places=2, default=0)
 
     class Meta:
         verbose_name = "Card"
@@ -180,7 +180,7 @@ class Card(models.Model):
     def __str__(self):
         return self.number
 
-class Movement(models.Model):
+class CardMovement(models.Model):
     card = models.ForeignKey(Card, on_delete=models.CASCADE)
     date_time = models.DateTimeField(auto_now=True)
     operation = models.CharField(max_length=20)
@@ -192,3 +192,17 @@ class Movement(models.Model):
     
     def __str__(self):
         return f"Valor de {self.value} no cartao com n° {self.card}"
+    
+
+class AccountMovement(models.Model):
+    account = models.ForeignKey(Account, on_delete=models.CASCADE, null=True)
+    date_time = models.DateTimeField(auto_now=True)
+    operation = models.CharField(max_length=20)
+    value = models.DecimalField(max_digits=20, decimal_places=2)
+
+    class Meta:
+        verbose_name = "Account Movement"
+        verbose_name_plural = "Account Movements"
+    
+    def __str__(self):
+        return f"Valor de {self.value} na conta com n° {self.account}"
