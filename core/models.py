@@ -91,7 +91,7 @@ class ClientLegal(models.Model):
 
 class Account(models.Model):
     balance = models.FloatField()
-    agency = models.CharField(max_length=10, primary_key=True)
+    agency = models.CharField(max_length=10)
     number = models.CharField(max_length=25, null=False)
     type = models.CharField(max_length=20, null=False)
     client = models.ManyToManyField('Client')
@@ -103,7 +103,7 @@ class Account(models.Model):
         verbose_name_plural = "Accounts"
 
     def __str__(self):
-        return f"Agência {self.agency}"
+        return f"Conta {self.id}"
 
 
 class Contact(models.Model):
@@ -152,7 +152,8 @@ class Loan(models.Model):
         verbose_name_plural = "Loans"
     
     def __str__(self):
-        return str(self.id)
+        clients = ", ".join([client.name for client in self.account.client.all()])
+        return f"Empréstimo da {self.account} do Cliente {clients}"
 
 
 class LoanInstallment(models.Model):
@@ -160,7 +161,7 @@ class LoanInstallment(models.Model):
     installment_number = models.IntegerField()
     due_date = models.DateField()
     installment_value = models.DecimalField(max_digits=20, decimal_places=2)
-    pay_day = models.DateField()
+    pay_day = models.DateField(null=True, blank=True)
     amount_paid = models.DecimalField(max_digits=20, decimal_places=2, blank=True, null=True)
     
 
