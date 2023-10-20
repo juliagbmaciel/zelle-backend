@@ -20,7 +20,8 @@ from core.urls import router
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('auth/', include('djoser.urls')),
-    path('auth/', include('djoser.urls.authtoken')),
-    path('api/', include(router.urls))
+    path('api/v1/', include(router.urls)),
+    path('api/v1/', include('core.urls')),
+    path('api/v1/auth/', include('djoser.urls.authtoken')),
+    path('api/v1/auth/', include('djoser.urls')),
 ]

@@ -65,7 +65,7 @@ class Client(models.Model):
 
 
 class ClientPhysical(models.Model):
-    client = models.OneToOneField('Client', on_delete=models.CASCADE)
+    client = models.OneToOneField('Client', on_delete=models.CASCADE, null=True)
     rg = models.CharField(max_length=18, blank=False)
 
     class Meta:

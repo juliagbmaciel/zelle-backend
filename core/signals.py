@@ -6,7 +6,7 @@ from decimal import Decimal
 
 
 @receiver(post_save, sender=Loan)
-def testando_signal(sender, instance, **kwargs):
+def loan_installment_signal(sender, instance, **kwargs):
     if instance.approved and instance.number_installments:
         cash_interest = instance.cash_interest
         juro = (cash_interest / 100) * float(instance.amount_requested)

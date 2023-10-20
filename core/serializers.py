@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import User, ClientPhysical, Client
+from .models import User, ClientPhysical, Client, ClientLegal
 
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
@@ -18,10 +18,6 @@ class UserSerializer(serializers.ModelSerializer):
         user.save()
         return user
 
-class ClientPhysicalSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = ClientPhysical
-        fields = "__all__"
 
 
 class ClientSerializer(serializers.ModelSerializer):
@@ -29,4 +25,19 @@ class ClientSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Client
+        fields = "__all__"
+
+
+class ClientPhysicalSerializer(serializers.ModelSerializer):
+    client = ClientSerializer(many=False, read_only=True) 
+    class Meta:
+        model = ClientPhysical
+        fields = "__all__"
+
+
+class ClientLegalSerializer(serializers.ModelSerializer):
+    client = ClientSerializer(many=False, read_only=True) 
+
+    class Meta:
+        model = ClientLegal
         fields = "__all__"
