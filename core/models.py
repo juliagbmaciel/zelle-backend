@@ -90,7 +90,7 @@ class ClientLegal(models.Model):
     
 
 class Account(models.Model):
-    balance = models.FloatField()
+    balance = models.FloatField(null=True, blank=True)
     agency = models.CharField(max_length=10)
     number = models.CharField(max_length=25, null=False)
     type = models.CharField(max_length=20, null=False)
@@ -101,7 +101,7 @@ class Account(models.Model):
     class Meta:
         verbose_name = "Account"
         verbose_name_plural = "Accounts"
-        unique_together = ('agency', 'number')
+
 
     def __str__(self):
         return f"Conta {self.id}"

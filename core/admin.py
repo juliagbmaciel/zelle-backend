@@ -64,11 +64,11 @@ class LoanInstallmentAdmin(admin.ModelAdmin):
 
 
 
-# @admin.register(Carro)
-# class CarroAdmin(admin.ModelAdmin):
-#     list_display = ('montadora', 'modelo', 'chassi', 'preco', 'get_motoristas')
+# # @admin.register(Carro)
+# # class CarroAdmin(admin.ModelAdmin):
+# #     list_display = ('montadora', 'modelo', 'chassi', 'preco', 'get_motoristas')
 
-#     def get_motoristas(self, obj):
-#         return ', '.join([m.username for m in obj.motoristas.all()])
+# #     def get_motoristas(self, obj):
+# #         return ', '.join([m.username for m in obj.motoristas.all()])
 
-#     get_motoristas.short_description = 'Motoristas'
+# #     get_motoristas.short_description = 'Motoristas'

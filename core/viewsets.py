@@ -99,7 +99,7 @@ class GetClientIDView(APIView):
         
 def create_number_account():
     while True:
-        number_account = str(random.randint(1000000, 9999999))  # Gere um número aleatório de 7 dígitos
+        number_account = str(random.randint(1000000, 9999999))  
         if not Account.objects.filter(number=number_account).exists():
             return number_account
 
@@ -110,9 +110,8 @@ class AccountViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         client = Client.objects.filter(user=self.request.user).first()
         if client:
-            return client.account_set.all()  # Acesse as contas relacionadas ao cliente
+            return client.account_set.all() 
         else:
-        # Trate o caso em que o cliente não foi encontrado
             return Account.objects.none()
 
     def create(self, request, *args, **kwargs):
@@ -140,23 +139,33 @@ class AccountViewSet(viewsets.ModelViewSet):
         return Response(serializer.data, status=status.HTTP_201_CREATED)
     
     def update(self, request, *args, **kwargs):
-        # Certifique-se de que limit, agency e number não sejam atualizados
-        if 'limit' in request.data or 'agency' in request.data or 'number' in request.data:
-            return Response(
-                {"error": "Não é permitido atualizar limit, agency ou number."},
-                status=status.HTTP_400_BAD_REQUEST
-            )
+        instance = self.get_object()
+        partial = kwargs.pop('partial', False)
 
-        return super(AccountViewSet, self).update(request, *args, **kwargs)
+        # Verifique se a solicitação é para uma atualização parcial
+        if partial:
+            # Atualize apenas os campos desejados, excluindo aqueles que não estão presentes na solicitação
+            for key, value in request.data.items():
+                setattr(instance, key, value)
+        else:
+            # Se não for uma atualização parcial, continue com a atualização completa
+            serializer = self.get_serializer(instance, data=request.data)
+            serializer.is_valid(raise_exception=True)
+            self.perform_update(serializer)
+
+        instance.save()
+
+        return Response(self.get_serializer(instance).data)
 
     
     def partial_update(self, request, *args, **kwargs):
-        
+        instance = self.get_object()
+        serializer = PartialAccountSerializer(instance, data=request.data, partial=True)
 
-        serializer = self.get_serializer(data=request.data, partial=True)
-        serializer.is_valid(raise_exception=True)
-        serializer.save()
-
-        return Response(serializer.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data)
+        else:
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
