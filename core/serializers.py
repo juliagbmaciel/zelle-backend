@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import User, ClientPhysical, Client, ClientLegal
+from .models import User, ClientPhysical, Client, ClientLegal, Loan, Account
 
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
@@ -41,3 +41,18 @@ class ClientLegalSerializer(serializers.ModelSerializer):
     class Meta:
         model = ClientLegal
         fields = "__all__"
+
+
+class LoanSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Loan
+        fields = '__all__'
+
+
+class AccountSerializer(serializers.ModelSerializer):
+    client = ClientSerializer( many=True, read_only=True)
+    class Meta:
+        model = Account
+        fields = '__all__'
+        read_only_fields = ('balance', 'agency', 'limit', 'active', 'number')
+

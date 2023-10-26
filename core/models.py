@@ -94,13 +94,14 @@ class Account(models.Model):
     agency = models.CharField(max_length=10)
     number = models.CharField(max_length=25, null=False)
     type = models.CharField(max_length=20, null=False)
-    client = models.ManyToManyField('Client')
+    client = models.ManyToManyField('Client', null=True, blank=True)
     limit = models.DecimalField(max_digits=20, decimal_places=2)
     active = models.BooleanField()
 
     class Meta:
         verbose_name = "Account"
         verbose_name_plural = "Accounts"
+        unique_together = ('agency', 'number')
 
     def __str__(self):
         return f"Conta {self.id}"
