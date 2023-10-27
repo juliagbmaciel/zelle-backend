@@ -60,17 +60,17 @@ class AccountSerializer(serializers.ModelSerializer):
 
 
 class CardSerializer(serializers.ModelSerializer):
-    expiration = serializers.SerializerMethodField()
+    # expiration = serializers.SerializerMethodField()
 
     class Meta:
         model = Card
         fields = '__all__'
 
-    def get_expiration(self, obj):
-        if isinstance(obj, OrderedDict):
-            return None
-        else:
-            return obj.expiration.date()
+    # def get_expiration(self, obj):
+    #     if isinstance(obj, OrderedDict):
+    #         return None
+    #     else:
+    #         return obj.expiration.date()
       
 
 

@@ -7,6 +7,7 @@ from rest_framework import status
 from rest_framework.response import Response
 from rest_framework import mixins
 from rest_framework import generics
+from django_filters import rest_framework as filters
 import random
 
 
@@ -172,15 +173,20 @@ class AccountViewSet(viewsets.ModelViewSet):
     def partial_update(self, request, *args, **kwargs):
         print(request.data)
         instance = self.get_object()
+        if request.data['balance']:
+            instance.balance = request.data['balance']
         serializer = self.get_serializer(instance, data=request.data, partial=True)
         serializer.is_valid(raise_exception=True)
         serializer.save()
-
         return Response(serializer.data)
 
 
-class CreateCardView(generics.CreateAPIView):
+class CardViewSet(viewsets.ModelViewSet):
     serializer_class = CardSerializer
+    queryset = Card.objects.all()
+    filter_backends = (filters.DjangoFilterBackend,)
+    filterset_fields = ('account',)
+    search_fields = ('account')
 
         
     def create(self, request, *args, **kwargs):
@@ -194,7 +200,6 @@ class CreateCardView(generics.CreateAPIView):
             return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
 
     def perform_create(self, serializer):
-        
         account = Account.objects.get(id=self.request.data['account'])
         if account.balance < 500 or not account.active:
             return Response({"detail": "Criação de cartão não autorizada"}, status=status.HTTP_401_UNAUTHORIZED)
@@ -206,6 +211,7 @@ class CreateCardView(generics.CreateAPIView):
         banner = random.choice(["Visa", "Mastercard"])
         situation = "ativa"
         expiration = timezone.now() + timezone.timedelta(days=6*365)
+        print(expiration)
         limit = 400.0
         try:
             serializer.save(
@@ -214,11 +220,13 @@ class CreateCardView(generics.CreateAPIView):
                 cvv=cvv,
                 banner=banner,
                 situation=situation,
-                expiration=expiration,
+                expiration=expiration.date(),
                 limit=limit
             )
             return Response(status=status.HTTP_201_CREATED)
         except:
             return Response({"detail":"Algo deu errado."}, status=status.HTTP_400_BAD_REQUEST)
+
+
 
 
