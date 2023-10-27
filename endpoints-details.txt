@@ -1,0 +1,30 @@
+(api/v1/clients/) - Cria, lê e atualiza o cliente, modelo JSON:
+
+{
+  "name": "João da Silva",
+  "user": "joaosilva123",
+  "social_name": "",
+  "picture": "https://example.com/picture.jpg",
+  "birthdate": "1990-05-15"
+}
+
+(api/v1/client-physical/) - '' '' '' '' o cliente físico, modelo JSON:
+
+{
+    "rg": 123456789
+}
+
+(api/v1/client-legal/) - '' '' '' '' o cliente jurídico, modelo JSON:
+
+{
+    "state_registration": 123123123123,
+    "municipal_registration": 3254787841
+}
+(api/v1/account/) - '' '' '' '' as contas, modelo JSON: 
+
+{
+    "type": "Conta Corrente",
+}
+api/v1/ clients/id/ - retorna o id do cliente de acordo com o token
+api/v1/auth/
+api/v1/auth/

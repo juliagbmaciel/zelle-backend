@@ -8,7 +8,11 @@ from .models import (
     ClientPhysical, 
     Investment,
     Loan,
-    LoanInstallment
+    LoanInstallment,
+    Contact,
+    Card,
+    CardMovement,
+    AccountMovement
     )
 
 
@@ -54,21 +58,29 @@ class LoanInstallmentAdmin(admin.ModelAdmin):
     list_display = ('loan', 'installment_number', 'due_date', 'installment_value', 'pay_day')
 
 
+@admin.register(ClientLegal)
+class ClientLegalAdmin(admin.ModelAdmin):
+    list_display =('client', 'state_registration', 'municipal_registration')
+
+@admin.register(Contact)
+class ContactAdmin(admin.ModelAdmin):
+    list_display = ('client', 'number', 'ramal', 'email', 'observation')
+
+@admin.register(Address)
+class AddressAdmin(admin.ModelAdmin):
+    list_display = ('street', 'neighborhood', 'city', 'state', 'zip_code')
+
+@admin.register(Card)
+class CardAdmin(admin.ModelAdmin):
+    list_display = ('account', 'number', 'cvv', 'expiration', 'banner', 'situation', 'limit')
+
+@admin.register(CardMovement)
+class CardMovementAdmin(admin.ModelAdmin):
+    list_display = ('card', 'date_time', 'operation', 'value')
 
 
+@admin.register(AccountMovement)
+class AccountMovementAdmin(admin.ModelAdmin):
+    list_display = ('account', 'date_time', 'operation', 'value')
 
-
-
-
-
-
-
-
-# # @admin.register(Carro)
-# # class CarroAdmin(admin.ModelAdmin):
-# #     list_display = ('montadora', 'modelo', 'chassi', 'preco', 'get_motoristas')
-
-# #     def get_motoristas(self, obj):
-# #         return ', '.join([m.username for m in obj.motoristas.all()])
-
-# #     get_motoristas.short_description = 'Motoristas'
+    

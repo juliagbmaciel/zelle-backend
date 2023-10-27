@@ -1,5 +1,6 @@
 from rest_framework import serializers
-from .models import User, ClientPhysical, Client, ClientLegal, Loan, Account
+from .models import User, ClientPhysical, Client, ClientLegal, Loan, Account, Card
+from collections import OrderedDict
 
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
@@ -50,9 +51,26 @@ class LoanSerializer(serializers.ModelSerializer):
 
 
 class AccountSerializer(serializers.ModelSerializer):
-    client = ClientSerializer( many=True, read_only=True)
+    # client = ClientSerializer(many=True, read_only=True)
     class Meta:
         model = Account
         fields = '__all__'
         read_only_fields = ('balance', 'agency', 'limit', 'active', 'number')
+
+
+
+class CardSerializer(serializers.ModelSerializer):
+    expiration = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Card
+        fields = '__all__'
+
+    def get_expiration(self, obj):
+        if isinstance(obj, OrderedDict):
+            return None
+        else:
+            return obj.expiration.date()
+      
+
 

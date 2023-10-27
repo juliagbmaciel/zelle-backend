@@ -2,6 +2,7 @@ from django.db import models
 from django.contrib.auth.models import AbstractUser
 from django.contrib.auth.base_user import BaseUserManager
 from django.contrib.auth import get_user_model
+import uuid
 
 
 
@@ -86,15 +87,16 @@ class ClientLegal(models.Model):
         verbose_name_plural = "Legal Clients"
     
     def __str__(self):
-        return self.client
+        return str(self.client)
     
 
 class Account(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     balance = models.FloatField(null=True, blank=True)
     agency = models.CharField(max_length=10)
     number = models.CharField(max_length=25, null=False)
-    type = models.CharField(max_length=20, null=False)
-    client = models.ManyToManyField('Client', null=True, blank=True)
+    type = models.CharField(max_length=20, null=True)
+    client = models.ManyToManyField('Client', null=False)
     limit = models.DecimalField(max_digits=20, decimal_places=2)
     active = models.BooleanField()
 
@@ -167,13 +169,13 @@ class LoanInstallment(models.Model):
     
 
 class Card(models.Model):
-    account = models.ForeignKey(Account, on_delete=models.CASCADE)
-    number = models.CharField(max_length=30)
-    cvv = models.CharField(max_length=5)
-    expiration = models.DateField()
-    banner = models.CharField(max_length=20)
-    situation = models.CharField(max_length=20)
-    limit = models.DecimalField(max_digits=20, decimal_places=2, default=0)
+    account = models.ForeignKey(Account, on_delete=models.CASCADE, null=True)
+    number = models.CharField(max_length=30,null=True)
+    cvv = models.CharField(max_length=5,null=True)
+    expiration = models.DateField(null=True)
+    banner = models.CharField(max_length=20, null=True)
+    situation = models.CharField(max_length=20, null=True)
+    limit = models.DecimalField(max_digits=20, decimal_places=2, default=0, null=True)
 
     class Meta:
         verbose_name = "Card"

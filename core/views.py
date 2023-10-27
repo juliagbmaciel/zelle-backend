@@ -1,10 +1,12 @@
 from rest_framework import viewsets
 from rest_framework.views import APIView
-from .serializers import ClientPhysicalSerializer, ClientSerializer, ClientLegalSerializer, AccountSerializer
-from .models import ClientPhysical, Client, ClientLegal, Account
-from rest_framework import filters
+from .serializers import ClientPhysicalSerializer, ClientSerializer, ClientLegalSerializer, AccountSerializer, CardSerializer
+from .models import ClientPhysical, Client, ClientLegal, Account, Card
+from django.utils import timezone
 from rest_framework import status
 from rest_framework.response import Response
+from rest_framework import mixins
+from rest_framework import generics
 import random
 
 
@@ -60,8 +62,6 @@ class ClientPhysicalViewSet(viewsets.ModelViewSet):
         return Response(serializer.data)
 
 
-
-
 class ClientLegalViewSet(viewsets.ModelViewSet):
     queryset = ClientLegal.objects.all()
     serializer_class = ClientLegalSerializer
@@ -69,11 +69,23 @@ class ClientLegalViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         user = self.request.user
         return ClientLegal.objects.filter(client__user=user)
+            
 
-    def perform_create(self, serializer):
-        client = Client.objects.filter(user=self.request.user).first()
+    def create(self, request):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        user = self.request.user
+        existing_client_legal = ClientLegal.objects.filter(client__user=user).first()
+        if existing_client_legal:
+
+            return Response(status=status.HTTP_400_BAD_REQUEST)
+        
+        client = Client.objects.filter(user=user).first()
         if client:
             serializer.save(client=client)
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        else:
+            return Response({"message": "Cliente não encontrado"}, status=status.HTTP_400_BAD_REQUEST)
 
     def partial_update(self, request, *args, **kwargs):
         client_legal = ClientLegal.objects.get(client__user=request.user)
@@ -85,8 +97,7 @@ class ClientLegalViewSet(viewsets.ModelViewSet):
         return Response(serializer.data)
 
 
-
-# View que retorna o ID do cliente para facilitar uso da API
+# View que retorna o ID do cliente para facilitar uso da API (para atualizar clientes)
 class GetClientIDView(APIView):
     def get(self, request):
         user = self.request.user
@@ -97,11 +108,15 @@ class GetClientIDView(APIView):
         except Client.DoesNotExist:
             return Response({"detail": "Perfil de cliente não encontrado para este usuário."}, status=status.HTTP_404_NOT_FOUND)
         
+
+
 def create_number_account():
     while True:
         number_account = str(random.randint(1000000, 9999999))  
         if not Account.objects.filter(number=number_account).exists():
             return number_account
+
+
 
 class AccountViewSet(viewsets.ModelViewSet):
     queryset = Account.objects.all()
@@ -120,7 +135,12 @@ class AccountViewSet(viewsets.ModelViewSet):
         default_limit = 1000000000000
         default_active = True
 
-        client_ids = request.data.get('client', [])
+        if request.data.get('client'):
+            client_ids = request.data.get('client', [])
+        else:
+            client = Client.objects.filter(user=self.request.user).first()
+            client_ids = [client.id]
+            print(client_ids)
         account_type = request.data.get('type', '')
 
 
@@ -140,32 +160,65 @@ class AccountViewSet(viewsets.ModelViewSet):
     
     def update(self, request, *args, **kwargs):
         instance = self.get_object()
-        partial = kwargs.pop('partial', False)
 
-        # Verifique se a solicitação é para uma atualização parcial
-        if partial:
-            # Atualize apenas os campos desejados, excluindo aqueles que não estão presentes na solicitação
-            for key, value in request.data.items():
-                setattr(instance, key, value)
-        else:
-            # Se não for uma atualização parcial, continue com a atualização completa
-            serializer = self.get_serializer(instance, data=request.data)
-            serializer.is_valid(raise_exception=True)
-            self.perform_update(serializer)
+        serializer = self.get_serializer(instance, data=request.data)
+        serializer.is_valid(raise_exception=True)
+        self.perform_update(serializer)
 
         instance.save()
 
         return Response(self.get_serializer(instance).data)
-
     
     def partial_update(self, request, *args, **kwargs):
+        print(request.data)
         instance = self.get_object()
-        serializer = PartialAccountSerializer(instance, data=request.data, partial=True)
+        serializer = self.get_serializer(instance, data=request.data, partial=True)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
 
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data)
+        return Response(serializer.data)
+
+
+class CreateCardView(generics.CreateAPIView):
+    serializer_class = CardSerializer
+
+        
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        perform_create = self.perform_create(serializer)
+        if perform_create.status_code != 201:
+            return perform_create
         else:
-            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+            headers = self.get_success_headers(serializer.data)
+            return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
+
+    def perform_create(self, serializer):
+        
+        account = Account.objects.get(id=self.request.data['account'])
+        if account.balance < 500 or not account.active:
+            return Response({"detail": "Criação de cartão não autorizada"}, status=status.HTTP_401_UNAUTHORIZED)
+        while True:
+            generated_number = " ".join(["".join(random.choices("0123456789", k=4)) for _ in range(4)])
+            if not Card.objects.filter(number=generated_number).exists():
+                break
+        cvv = "".join(random.choices("0123456789", k=3))
+        banner = random.choice(["Visa", "Mastercard"])
+        situation = "ativa"
+        expiration = timezone.now() + timezone.timedelta(days=6*365)
+        limit = 400.0
+        try:
+            serializer.save(
+                account=account,
+                number=generated_number,
+                cvv=cvv,
+                banner=banner,
+                situation=situation,
+                expiration=expiration,
+                limit=limit
+            )
+            return Response(status=status.HTTP_201_CREATED)
+        except:
+            return Response({"detail":"Algo deu errado."}, status=status.HTTP_400_BAD_REQUEST)
 
 
