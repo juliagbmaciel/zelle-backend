@@ -50,6 +50,7 @@ class Address(models.Model):
     
 
 class Client(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     address_code = models.ForeignKey(Address, on_delete=models.SET_NULL, blank=True, null=True)
     name = models.CharField(max_length=100, null=False)
     user = models.OneToOneField(get_user_model(), on_delete=models.CASCADE, blank=True, null=True)
@@ -66,6 +67,7 @@ class Client(models.Model):
 
 
 class ClientPhysical(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     client = models.OneToOneField('Client', on_delete=models.CASCADE, null=True)
     rg = models.CharField(max_length=18, blank=False)
 
@@ -78,6 +80,7 @@ class ClientPhysical(models.Model):
 
 
 class ClientLegal(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     client = models.OneToOneField('Client', on_delete=models.CASCADE)
     state_registration = models.CharField(max_length=200, blank=True)
     municipal_registration = models.CharField(max_length=200, blank=True)
@@ -124,6 +127,7 @@ class Contact(models.Model):
         return self.number
 
 class Investment(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     account = models.ForeignKey(Account, on_delete=models.CASCADE)
     type = models.CharField(max_length=30)
     contribution = models.DecimalField(max_digits=20, decimal_places=2)
@@ -141,6 +145,7 @@ class Investment(models.Model):
         return f"Investimento da conta com {self.account}"
 
 class Loan(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     account = models.ForeignKey(Account, on_delete=models.CASCADE)
     request_date = models.DateField(auto_now_add=True)
     amount_requested = models.DecimalField(max_digits=20, decimal_places=2)
@@ -169,6 +174,7 @@ class LoanInstallment(models.Model):
     
 
 class Card(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     account = models.ForeignKey(Account, on_delete=models.CASCADE, null=True)
     number = models.CharField(max_length=30,null=True)
     cvv = models.CharField(max_length=5,null=True)
@@ -185,6 +191,7 @@ class Card(models.Model):
         return self.number
 
 class CardMovement(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     card = models.ForeignKey(Card, on_delete=models.CASCADE)
     date_time = models.DateTimeField(auto_now=True)
     operation = models.CharField(max_length=20)
@@ -199,6 +206,7 @@ class CardMovement(models.Model):
     
 
 class AccountMovement(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     account = models.ForeignKey(Account, on_delete=models.CASCADE, null=True)
     date_time = models.DateTimeField(auto_now=True)
     operation = models.CharField(max_length=20)
