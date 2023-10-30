@@ -5,8 +5,6 @@ from .models import ClientPhysical, Client, ClientLegal, Account, Card
 from django.utils import timezone
 from rest_framework import status
 from rest_framework.response import Response
-from rest_framework import mixins
-from rest_framework import generics
 from django_filters import rest_framework as filters
 import random
 
@@ -130,57 +128,30 @@ class AccountViewSet(viewsets.ModelViewSet):
         else:
             return Account.objects.none()
 
-    def create(self, request, *args, **kwargs):
-        default_balance = 0
-        default_agency = random.choice(["0917-2", "0918-3", "0919-4", "0920-5", "0921-6"])
-        default_limit = 1000000000000
-        default_active = True
-
-        if request.data.get('client'):
-            client_ids = request.data.get('client', [])
-        else:
-            client = Client.objects.filter(user=self.request.user).first()
-            client_ids = [client.id]
-            print(client_ids)
-        account_type = request.data.get('type', '')
-
-
-        account = Account(
-            balance=default_balance,
-            agency=default_agency,
-            limit=default_limit,
-            active=default_active,
-            type=account_type,
-            number = create_number_account()
-        )
-        account.save()
-        account.client.set(client_ids) 
-
-        serializer = self.get_serializer(account)
-        return Response(serializer.data, status=status.HTTP_201_CREATED)
     
-    def update(self, request, *args, **kwargs):
-        instance = self.get_object()
+    # def update(self, request, *args, **kwargs):
+    #     instance = self.get_object()
 
-        serializer = self.get_serializer(instance, data=request.data)
-        serializer.is_valid(raise_exception=True)
-        self.perform_update(serializer)
+    #     serializer = self.get_serializer(instance, data=request.data)
+    #     serializer.is_valid(raise_exception=True)
+    #     self.perform_update(serializer)
 
-        instance.save()
+    #     instance.save()
 
-        return Response(self.get_serializer(instance).data)
+    #     return Response(self.get_serializer(instance).data)
     
     def partial_update(self, request, *args, **kwargs):
-        print(request.data)
         instance = self.get_object()
-        if request.data['balance']:
-            instance.balance = request.data['balance']
         serializer = self.get_serializer(instance, data=request.data, partial=True)
         serializer.is_valid(raise_exception=True)
         serializer.save()
         return Response(serializer.data)
 
 
+
+"""
+Endpoint de criação de cartão, o método 
+"""
 class CardViewSet(viewsets.ModelViewSet):
     serializer_class = CardSerializer
     queryset = Card.objects.all()
@@ -188,44 +159,6 @@ class CardViewSet(viewsets.ModelViewSet):
     filterset_fields = ('account',)
     search_fields = ('account')
 
-        
-    def create(self, request, *args, **kwargs):
-        serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        perform_create = self.perform_create(serializer)
-        if perform_create.status_code != 201:
-            return perform_create
-        else:
-            headers = self.get_success_headers(serializer.data)
-            return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
-
-    def perform_create(self, serializer):
-        account = Account.objects.get(id=self.request.data['account'])
-        if account.balance < 500 or not account.active:
-            return Response({"detail": "Criação de cartão não autorizada"}, status=status.HTTP_401_UNAUTHORIZED)
-        while True:
-            generated_number = " ".join(["".join(random.choices("0123456789", k=4)) for _ in range(4)])
-            if not Card.objects.filter(number=generated_number).exists():
-                break
-        cvv = "".join(random.choices("0123456789", k=3))
-        banner = random.choice(["Visa", "Mastercard"])
-        situation = "ativa"
-        expiration = timezone.now() + timezone.timedelta(days=6*365)
-        print(expiration)
-        limit = 400.0
-        try:
-            serializer.save(
-                account=account,
-                number=generated_number,
-                cvv=cvv,
-                banner=banner,
-                situation=situation,
-                expiration=expiration.date(),
-                limit=limit
-            )
-            return Response(status=status.HTTP_201_CREATED)
-        except:
-            return Response({"detail":"Algo deu errado."}, status=status.HTTP_400_BAD_REQUEST)
 
 
 

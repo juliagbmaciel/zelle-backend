@@ -2,7 +2,6 @@
 
 {
   "name": "João da Silva",
-  "user": "joaosilva123",
   "social_name": "",
   "picture": "https://example.com/picture.jpg",
   "birthdate": "1990-05-15"
@@ -26,5 +25,13 @@
     "type": "Conta Corrente",
 }
 api/v1/ clients/id/ - retorna o id do cliente de acordo com o token
-api/v1/auth/
-api/v1/auth/
+
+
+/api/v1/auth/token/login - login na conta, modelo JSON:
+
+{
+    "cpf": "63423456788",
+    "password": "talsenhaaqui"
+}
+
+/api/v1/auth/token/logout - logout na conta, envia apenas o token como headers.
