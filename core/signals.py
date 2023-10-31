@@ -7,13 +7,16 @@ from decimal import Decimal
 
 @receiver(post_save, sender=Loan)
 def loan_installment_signal(sender, instance, **kwargs):
+    print('uepaaa')
     if instance.approved and instance.number_installments:
+        
         cash_interest = instance.cash_interest
         juro = (cash_interest / 100) * float(instance.amount_requested)
         total_value = instance.amount_requested + Decimal(juro)
         installment_value = total_value / instance.number_installments
         due_date = instance.approval_date + timedelta(days=30)
         for i in range(1, instance.number_installments + 1):
+            print("passei no for e o i ta em: ", i)
             LoanInstallment.objects.create(
                 loan=instance,
                 installment_number=i,
@@ -25,6 +28,3 @@ def loan_installment_signal(sender, instance, **kwargs):
             due_date += timedelta(days=30)
 
 
-@receiver(pre_save, sender=Loan)
-def valid_user_to_loan(sender, **kwargs):
-    print(sender)

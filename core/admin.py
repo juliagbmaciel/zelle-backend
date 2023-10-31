@@ -12,7 +12,8 @@ from .models import (
     Contact,
     Card,
     CardMovement,
-    AccountMovement
+    AccountMovement,
+    CardBill
     )
 
 
@@ -83,4 +84,17 @@ class CardMovementAdmin(admin.ModelAdmin):
 class AccountMovementAdmin(admin.ModelAdmin):
     list_display = ('account', 'date_time', 'operation', 'value')
 
+
+@admin.register(CardBill)
+class CardBillAdmin(admin.ModelAdmin):
+    list_display = ('id', 'card', 'value', 'value')
     
+
+    """
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    card = models.ForeignKey(Card, on_delete=models.CASCADE)
+    value = models.CharField(max_length=300)
+    available_value = models.CharField(max_length=300)
+    due_date = models.DateField()
+    closing_date = models.DateField()
+"""

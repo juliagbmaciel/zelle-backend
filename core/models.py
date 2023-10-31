@@ -2,6 +2,7 @@ from django.db import models
 from django.contrib.auth.models import AbstractUser
 from django.contrib.auth.base_user import BaseUserManager
 from django.contrib.auth import get_user_model
+from django.utils import timezone
 import uuid
 
 
@@ -99,7 +100,7 @@ class Account(models.Model):
     agency = models.CharField(max_length=10)
     number = models.CharField(max_length=25, null=False)
     type = models.CharField(max_length=20, null=True)
-    client = models.ManyToManyField('Client', null=False)
+    client = models.ManyToManyField('Client', null=True)
     limit = models.DecimalField(max_digits=20, decimal_places=2)
     active = models.BooleanField()
 
@@ -146,13 +147,13 @@ class Investment(models.Model):
 
 class Loan(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    account = models.ForeignKey(Account, on_delete=models.CASCADE)
+    account = models.ForeignKey(Account, on_delete=models.CASCADE, null=True)
     request_date = models.DateField(auto_now_add=True)
     amount_requested = models.DecimalField(max_digits=20, decimal_places=2)
-    cash_interest = models.FloatField()
-    approved = models.BooleanField()
+    cash_interest = models.FloatField(null=True)
+    approved = models.BooleanField(null=True)
     number_installments = models.IntegerField(null=True, blank=True)
-    approval_date = models.DateField(null=True, blank=True)
+    approval_date = models.DateField(null=True, blank=True, default=timezone.now().date())
     observation = models.CharField(max_length=200, null=True, blank=True)
 
     class Meta:
@@ -188,7 +189,7 @@ class Card(models.Model):
         verbose_name_plural = "Cards"
     
     def __str__(self):
-        return self.number
+        return str(self.id)
 
 class CardMovement(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
@@ -203,6 +204,22 @@ class CardMovement(models.Model):
     
     def __str__(self):
         return f"Valor de {self.value} no cartao com n° {self.card}"
+    
+
+class CardBill(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    card = models.ForeignKey(Card, on_delete=models.CASCADE)
+    value_to_pay = models.CharField(max_length=300)
+    available_value = models.CharField(max_length=300)
+    due_date = models.DateField()
+    closing_date = models.DateField()
+
+    class Meta:
+        verbose_name = "Card Bill"
+        verbose_name_plural = "Card Bills"
+    
+    def __str__(self):
+        return f"Fatura do cartão {self.card} do cliente {self.card__account__client}"
     
 
 class AccountMovement(models.Model):

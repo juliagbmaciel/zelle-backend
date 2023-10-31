@@ -1,7 +1,17 @@
 from rest_framework import serializers
-from .models import User, ClientPhysical, Client, ClientLegal, Loan, Account, Card
+from .models import (User, 
+                     ClientPhysical, 
+                     Client, 
+                     ClientLegal, 
+                     Loan, 
+                     Account, 
+                     Card, 
+                     LoanInstallment,
+                     CardMovement)
 import random
 from django.utils import timezone
+from django.db.models.signals import post_save
+from .signals import loan_installment_signal 
 
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
@@ -29,12 +39,76 @@ class ClientSerializer(serializers.ModelSerializer):
         model = Client
         fields = "__all__"
 
+    def create(self, validated_data):
+        user = self.context['request'].user
+        client_data = validated_data
+
+        if Client.objects.filter(user=user).first():
+            raise serializers.ValidationError("Este usuário já possui um cliente associado.")
+        
+        client = Client.objects.create(
+            name=client_data['name'],
+            social_name=client_data.get('social_name', None),
+            picture=client_data.get('picture', None),
+            birthdate=client_data['birthdate'],
+            user=user  
+        )
+        
+        if 'address_code' in client_data:
+            client.address_code = client_data['address_code']
+        
+        client.save()
+        
+        return client
+    
+    def update(self, instance, validated_data):
+        instance.name = validated_data.get('name', instance.name)
+        instance.social_name = validated_data.get('social_name', instance.social_name)
+        instance.picture = validated_data.get('picture', instance.picture)
+        instance.birthdate = validated_data.get('birthdate', instance.birthdate)
+
+        if 'address_code' in validated_data:
+            instance.address_code = validated_data['address_code']
+
+        instance.save()
+        
+        return instance
+    
+    def get_queryset(self):
+        queryset = super().get_queryset()
+
+        if self.context['request'].user.is_authenticated:
+            queryset = queryset.filter(user=self.context['request'].user)
+
+        return queryset
+
 
 class ClientPhysicalSerializer(serializers.ModelSerializer):
     client = ClientSerializer(many=False, read_only=True) 
     class Meta:
         model = ClientPhysical
         fields = "__all__"
+
+    def create(self, validated_data):
+        client = Client.objects.filter(user=self.context['request'].user).first()
+
+        if ClientPhysical.objects.filter(client=client).first() or ClientLegal.objects.filter(client=client).first():
+            raise serializers.ValidationError("Este usuário já possui um cliente físico ou legal associado.")
+        
+        client_data = validated_data
+        if client:
+            client_physical = ClientPhysical.objects.create(
+                rg=client_data['rg'],
+                client=client
+            )
+
+            return client_physical
+        else:
+            raise serializers.ValidationError("Algo deu errado na criação do cliente.")
+
+    def get_queryset(self):
+        user = self.context['request'].user
+        return ClientPhysical.objects.filter(client__user=user)
 
 
 class ClientLegalSerializer(serializers.ModelSerializer):
@@ -44,6 +118,26 @@ class ClientLegalSerializer(serializers.ModelSerializer):
         model = ClientLegal
         fields = "__all__"
 
+    def create(self, validated_data):
+        client = Client.objects.filter(user=self.context['request'].user).first()
+
+        if ClientPhysical.objects.filter(client=client).first() or ClientLegal.objects.filter(client=client).first():
+            raise serializers.ValidationError("Este usuário já possui um cliente físico ou legal associado.")
+        
+        client_data = validated_data
+        if client:
+            client_legal = ClientLegal.objects.create(
+                state_registration=client_data['state_registration'],
+                municipal_registration=client_data['municipal_registration']
+            )
+            return client_legal
+        else:
+            raise serializers.ValidationError("Algo deu errado na criação do cliente.")
+
+    def get_queryset(self):
+        user = self.context['request'].user
+        return ClientLegal.objects.filter(client__user=user)
+    
 
 class LoanSerializer(serializers.ModelSerializer):
     class Meta:
@@ -58,6 +152,13 @@ class AccountSerializer(serializers.ModelSerializer):
         fields = '__all__'
         read_only_fields = ('agency', 'limit', 'active', 'number')
 
+    def get_queryset(self):
+        client = Client.objects.filter(user=self.context['request'].user).first()
+        if client:
+            return client.account_set.all() 
+        else:
+            return Account.objects.none()
+
     def create(self, validated_data):
         default_balance = 0
         default_agency = random.choice(["0917-2", "0918-3", "0919-4", "0920-5", "0921-6"])
@@ -67,11 +168,14 @@ class AccountSerializer(serializers.ModelSerializer):
         account_type = validated_data.get('type', '')
 
         client_ids = validated_data.get('client', [])
-        print(client_ids)
+
         if not client_ids:
             client = Client.objects.filter(user=self.context['request'].user.id).first()
+
+            if Account.objects.filter(client=client).first():
+                raise serializers.ValidationError("Este cliente ja possui uma conta.")
+            
             if client:
-                
                 client_ids = [client.id]
 
         account = Account.objects.create(
@@ -102,11 +206,14 @@ class CardSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
     def create(self, validated_data):
-        account_id = self.context['request'].data.get('account')
-        account = Account.objects.get(id=account_id)
+        client = Client.objects.filter(user=self.context['request'].user).first()
+        account = Account.objects.get(client=client)
+        print(account)
 
         if account.balance < 500 or not account.active:
             raise serializers.ValidationError("Criação de cartão não autorizada", code="unauthorized")
+        if Card.objects.get(account=account):
+            raise serializers.ValidationError("Essa conta já possui um cartão", code="unauthorized")
 
         while True:
             generated_number = " ".join(["".join(random.choices("0123456789", k=4)) for _ in range(4)])
@@ -132,6 +239,64 @@ class CardSerializer(serializers.ModelSerializer):
         card.save()
         return card
 
+class LoanSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = Loan
+        fields = '__all__'
+    
+    def create(self, validated_data):
+        client = Client.objects.filter(user=self.context['request'].user).first()
+        account = Account.objects.get(client=client)
+        amount_requested = validated_data['amount_requested']
+        cash_interest = 9
+
+        if account.balance < 1000:
+            post_save.disconnect(loan_installment_signal, sender=Loan)
+            loan = Loan.objects.create(
+                account = account,
+                amount_requested = amount_requested,
+                cash_interest = cash_interest,
+                approved = False,
+                number_installments = validated_data['number_installments'],
+                approval_date = None,
+                observation = "Não fora autorizada a solicitação de emprestimo"
+            )
+            post_save.connect(loan_installment_signal, sender=Loan)
+            loan.save()
+
+            raise serializers.ValidationError("Conta não atende os requisitos para realização de emprestimo", code="unauthorized")
+        
+        else:
+       
+            post_save.disconnect(loan_installment_signal, sender=Loan)
+            loan = Loan.objects.create(
+                account = account,
+                amount_requested = amount_requested,
+                cash_interest = cash_interest,
+                approved = True,
+                number_installments = validated_data['number_installments'],
+                observation = "Empréstimo autorizado."
+            )
+            post_save.connect(loan_installment_signal, sender=Loan)
+            loan.save()
+            
+            return loan
+    
+    def get_queryset(self):
+        client = Client.objects.filter(user=self.context['request'].user).first()
+        account = Account.objects.filter(account=account).first()
+        if account:
+            return Loan.objects.filter(account=account)
+        else:
+            return Loan.objects.none()
+
+
+class LoanInstallmentSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = LoanInstallment
+        fields = '__all__'
 
 
 

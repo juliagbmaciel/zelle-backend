@@ -1,18 +1,31 @@
 from rest_framework.routers import SimpleRouter
-from .views import ClientViewSet, ClientPhysicalViewSet, GetClientIDView, AccountViewSet, ClientLegalViewSet, CardViewSet
+from .views import (ClientViewSet, 
+                    ClientPhysicalViewSet, 
+                    AccountViewSet, 
+                    ClientLegalViewSet, 
+                    CardViewSet,
+                    LoanViewSet,
+                    PayInstallmentView,
+                    )
 from django.urls import path
 
 
 
 router = SimpleRouter()
-router.register('clients', ClientViewSet, basename='Client')
-router.register('client-physical', ClientPhysicalViewSet, basename='Client-Physical')
-router.register('client-legal', ClientLegalViewSet, basename='Client-Legal')
-router.register('account', AccountViewSet, basename='Account')
-router.register('cards', CardViewSet, basename='Cards' )
+router.register('clients', ClientViewSet, basename='client')
+router.register('client-physical', ClientPhysicalViewSet, basename='client-physical')
+router.register('client-legal', ClientLegalViewSet, basename='client-legal')
+router.register('accounts', AccountViewSet, basename='account')
+router.register('cards', CardViewSet, basename='card' )
+router.register('loans', LoanViewSet, basename='loan')
+
+
 
 urlpatterns = [
-    path('clients/id', GetClientIDView.as_view(), name='Clients-Id'),
-    # path('create-card/', CreateCardView.as_view(), name='Create Card'),
+    path('pay-installments/<int:pk>', PayInstallmentView.as_view(), name='pay-loan'),
+    path('view-installments', PayInstallmentView.as_view(), name='view-loan-installments'),
 ]
+
+
+
 
