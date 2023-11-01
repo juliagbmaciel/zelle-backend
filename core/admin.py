@@ -13,7 +13,6 @@ from .models import (
     Card,
     CardMovement,
     AccountMovement,
-    CardBill
     )
 
 
@@ -85,9 +84,9 @@ class AccountMovementAdmin(admin.ModelAdmin):
     list_display = ('account', 'date_time', 'operation', 'value')
 
 
-@admin.register(CardBill)
-class CardBillAdmin(admin.ModelAdmin):
-    list_display = ('id', 'card', 'value', 'value')
+# @admin.register(CardBill)
+# class CardBillAdmin(admin.ModelAdmin):
+#     list_display = ('id', 'card', 'value', 'value')
     
 
     """

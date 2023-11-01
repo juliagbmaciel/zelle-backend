@@ -40,6 +40,7 @@ class ClientSerializer(serializers.ModelSerializer):
         fields = "__all__"
 
     def create(self, validated_data):
+        
         user = self.context['request'].user
         client_data = validated_data
 

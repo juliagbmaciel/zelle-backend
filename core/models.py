@@ -29,7 +29,7 @@ class CustomUserManager(BaseUserManager):
 
 class User(AbstractUser):
     cpf = models.CharField(max_length=50, unique=True)
-    username = models.CharField(max_length=80, unique=True)
+    username = models.CharField(max_length=80, unique=False)
 
     objects = CustomUserManager()
     USERNAME_FIELD = "cpf"
@@ -206,20 +206,20 @@ class CardMovement(models.Model):
         return f"Valor de {self.value} no cartao com n° {self.card}"
     
 
-class CardBill(models.Model):
-    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    card = models.ForeignKey(Card, on_delete=models.CASCADE)
-    value_to_pay = models.CharField(max_length=300)
-    available_value = models.CharField(max_length=300)
-    due_date = models.DateField()
-    closing_date = models.DateField()
+# class CardBill(models.Model):
+#     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+#     card = models.ForeignKey(Card, on_delete=models.CASCADE)
+#     value_to_pay = models.CharField(max_length=300)
+#     available_value = models.CharField(max_length=300)
+#     due_date = models.DateField()
+#     closing_date = models.DateField()
 
-    class Meta:
-        verbose_name = "Card Bill"
-        verbose_name_plural = "Card Bills"
+#     class Meta:
+#         verbose_name = "Card Bill"
+#         verbose_name_plural = "Card Bills"
     
-    def __str__(self):
-        return f"Fatura do cartão {self.card} do cliente {self.card__account__client}"
+#     def __str__(self):
+#         return f"Fatura do cartão {self.card} do cliente {self.card__account__client}"
     
 
 class AccountMovement(models.Model):

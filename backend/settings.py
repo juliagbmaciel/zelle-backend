@@ -25,7 +25,6 @@ SECRET_KEY = 'django-insecure-43tv@1=$5l_m^xqy11%n&1ij+#9x4m*6n71!ho=-e#p-ym3k(@
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ["*"]
 
 
 # Application definition
@@ -120,6 +119,7 @@ DJOSER = {
     'SERIALIZERS': {
         'user': 'core.serializers.UserSerializer',
     },
+
 }
 
 AUTH_USER_MODEL = 'core.User'
@@ -145,3 +145,6 @@ STATIC_URL = 'static/'
 # https://docs.djangoproject.com/en/4.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+CORS_ALLOW_ALL_ORIGINS = True
+ALLOWED_HOSTS = ['*']
