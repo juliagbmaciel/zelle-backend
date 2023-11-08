@@ -85,6 +85,7 @@ class ClientLegal(models.Model):
     client = models.OneToOneField('Client', on_delete=models.CASCADE)
     state_registration = models.CharField(max_length=200, blank=True)
     municipal_registration = models.CharField(max_length=200, blank=True)
+    cnpj = models.CharField(max_length=40, null=True)
 
     class Meta:
         verbose_name = "Legal Client"

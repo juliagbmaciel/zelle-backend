@@ -12,6 +12,8 @@ import random
 from django.utils import timezone
 from django.db.models.signals import post_save
 from .signals import loan_installment_signal 
+from rest_framework.exceptions import ValidationError
+
 
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
@@ -40,12 +42,11 @@ class ClientSerializer(serializers.ModelSerializer):
         fields = "__all__"
 
     def create(self, validated_data):
-        
         user = self.context['request'].user
         client_data = validated_data
 
         if Client.objects.filter(user=user).first():
-            raise serializers.ValidationError("Este usuário já possui um cliente associado.")
+            raise ValidationError("Este usuário já possui um cliente associado.", code='invalid')
         
         client = Client.objects.create(
             name=client_data['name'],
@@ -74,14 +75,7 @@ class ClientSerializer(serializers.ModelSerializer):
         instance.save()
         
         return instance
-    
-    def get_queryset(self):
-        queryset = super().get_queryset()
 
-        if self.context['request'].user.is_authenticated:
-            queryset = queryset.filter(user=self.context['request'].user)
-
-        return queryset
 
 
 class ClientPhysicalSerializer(serializers.ModelSerializer):
@@ -107,9 +101,6 @@ class ClientPhysicalSerializer(serializers.ModelSerializer):
         else:
             raise serializers.ValidationError("Algo deu errado na criação do cliente.")
 
-    def get_queryset(self):
-        user = self.context['request'].user
-        return ClientPhysical.objects.filter(client__user=user)
 
 
 class ClientLegalSerializer(serializers.ModelSerializer):
@@ -135,9 +126,7 @@ class ClientLegalSerializer(serializers.ModelSerializer):
         else:
             raise serializers.ValidationError("Algo deu errado na criação do cliente.")
 
-    def get_queryset(self):
-        user = self.context['request'].user
-        return ClientLegal.objects.filter(client__user=user)
+
     
 
 class LoanSerializer(serializers.ModelSerializer):
@@ -153,12 +142,7 @@ class AccountSerializer(serializers.ModelSerializer):
         fields = '__all__'
         read_only_fields = ('agency', 'limit', 'active', 'number')
 
-    def get_queryset(self):
-        client = Client.objects.filter(user=self.context['request'].user).first()
-        if client:
-            return client.account_set.all() 
-        else:
-            return Account.objects.none()
+
 
     def create(self, validated_data):
         default_balance = 0
@@ -174,10 +158,13 @@ class AccountSerializer(serializers.ModelSerializer):
             client = Client.objects.filter(user=self.context['request'].user.id).first()
 
             if Account.objects.filter(client=client).first():
+                print(Account.objects.filter(client=client).first())
                 raise serializers.ValidationError("Este cliente ja possui uma conta.")
             
             if client:
                 client_ids = [client.id]
+            else:
+                raise serializers.ValidationError("Este usuário não está atrelado a nenhum cliente.")
 
         account = Account.objects.create(
             balance=default_balance,

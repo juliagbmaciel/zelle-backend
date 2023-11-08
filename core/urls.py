@@ -6,6 +6,7 @@ from .views import (ClientViewSet,
                     CardViewSet,
                     LoanViewSet,
                     PayInstallmentView,
+                    ClientDataView
                     )
 from django.urls import path
 
@@ -24,6 +25,7 @@ router.register('loans', LoanViewSet, basename='loan')
 urlpatterns = [
     path('pay-installments/<int:pk>', PayInstallmentView.as_view(), name='pay-loan'),
     path('view-installments', PayInstallmentView.as_view(), name='view-loan-installments'),
+    path('client-all', ClientDataView.as_view(), name='client-data-all'),
 ]
 
 

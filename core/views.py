@@ -19,6 +19,8 @@ from rest_framework.response import Response
 from django_filters import rest_framework as filters
 from rest_framework import generics, status
 from django.utils import timezone
+from rest_framework.views import APIView
+
 
 
 class ClientViewSet(viewsets.ModelViewSet):
@@ -29,6 +31,12 @@ class ClientViewSet(viewsets.ModelViewSet):
         serializer.save(user=self.request.user)
 
 
+    def get_queryset(self):
+        client = Client.objects.filter(user=self.request.user).first()
+        if client:
+            return [client]
+        return []
+    
 class ClientPhysicalViewSet(viewsets.ModelViewSet):
     queryset = ClientPhysical.objects.all()
     serializer_class = ClientPhysicalSerializer
@@ -42,6 +50,13 @@ class ClientPhysicalViewSet(viewsets.ModelViewSet):
         serializer.save()
 
         return Response(serializer.data)
+    
+    def get_queryset(self):
+        client = Client.objects.filter(user=self.request.user).first()
+        client_physical = ClientPhysical.objects.filter(client=client).first()
+        if client_physical:
+            return [client_physical]
+        return ["none"]
 
 
 class ClientLegalViewSet(viewsets.ModelViewSet):
@@ -57,6 +72,13 @@ class ClientLegalViewSet(viewsets.ModelViewSet):
         serializer.save()
 
         return Response(serializer.data)
+    
+    def get_queryset(self):
+        client = Client.objects.filter(user=self.request.user).first()
+        client_legal = ClientLegal.objects.filter(client=client)
+        if client_legal:
+            return [client_legal]
+        return ["none"]
 
 class AccountViewSet(viewsets.ModelViewSet):
     queryset = Account.objects.all()
@@ -69,6 +91,12 @@ class AccountViewSet(viewsets.ModelViewSet):
         serializer.save()
         return Response(serializer.data)
 
+    def get_queryset(self):
+        client = Client.objects.filter(user=self.request.user).first()
+        if client:
+            return Account.objects.filter(client=client)
+        else:
+            return Account.objects.none()
 
 class CardViewSet(viewsets.ModelViewSet):
     serializer_class = CardSerializer
@@ -126,6 +154,42 @@ class PayInstallmentView(generics.UpdateAPIView, generics.ListAPIView):
         queryset = self.get_queryset()
         serializer = self.serializer_class(queryset, many=True)
         return Response(serializer.data)
+    
+
+
+class ClientDataView(APIView):
+    def get(self, request):
+        user = request.user
+        try:
+            client = Client.objects.get(user=user)
+            data = {"client": None, "account": None}
+
+            if hasattr(client, 'clientphysical'):
+                serializer = ClientPhysicalSerializer(client.clientphysical)
+            elif hasattr(client, 'clientlegal'):
+                serializer = ClientLegalSerializer(client.clientlegal)
+            else:
+                return Response({"detail": "Cliente não encontrado."}, status=404)
+
+            data["client"] = serializer.data
+
+            # Verifique se há uma conta associada ao cliente
+            account = Account.objects.filter(client=client).first()
+            if account:
+                account_serializer = AccountSerializer(account)
+                data["account"] = account_serializer.data
+
+            return Response(data)
+        except Client.DoesNotExist:
+            return Response({"detail": "Cliente não encontrado."}, status=404)
+
+
+
+
+
+
+
+
             
 
 
