@@ -119,8 +119,10 @@ class ClientLegalSerializer(serializers.ModelSerializer):
         client_data = validated_data
         if client:
             client_legal = ClientLegal.objects.create(
+                cnpj=client_data['cnpj'],
                 state_registration=client_data['state_registration'],
-                municipal_registration=client_data['municipal_registration']
+                municipal_registration=client_data['municipal_registration'],
+                client=client
             )
             return client_legal
         else:
