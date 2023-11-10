@@ -199,11 +199,10 @@ class CardSerializer(serializers.ModelSerializer):
         client = Client.objects.filter(user=self.context['request'].user).first()
         account = Account.objects.get(client=client)
         print(account)
+        
 
-        if account.balance < 500 or not account.active:
+        if not account.active:
             raise serializers.ValidationError("Criação de cartão não autorizada", code="unauthorized")
-        if Card.objects.get(account=account):
-            raise serializers.ValidationError("Essa conta já possui um cartão", code="unauthorized")
 
         while True:
             generated_number = " ".join(["".join(random.choices("0123456789", k=4)) for _ in range(4)])

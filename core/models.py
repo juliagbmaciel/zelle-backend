@@ -109,9 +109,9 @@ class Account(models.Model):
         verbose_name = "Account"
         verbose_name_plural = "Accounts"
 
-
-    def __str__(self):
-        return f"Conta {self.id}"
+    def __str__(self): 
+        clients_str = ", ".join(str(client) for client in self.client.all())
+        return f"Clients: {clients_str}"
 
 
 class Contact(models.Model):
