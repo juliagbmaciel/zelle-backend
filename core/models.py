@@ -40,6 +40,7 @@ class User(AbstractUser):
 
 
 class Address(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     street = models.CharField(max_length=100)
     neighborhood = models.CharField(max_length=75)
     city = models.CharField(max_length=75)
