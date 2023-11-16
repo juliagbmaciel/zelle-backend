@@ -56,7 +56,7 @@ class Client(models.Model):
     name = models.CharField(max_length=100, null=False)
     user = models.OneToOneField(get_user_model(), on_delete=models.CASCADE, blank=True, null=True)
     social_name = models.CharField(max_length=100, blank=True, null=True)
-    picture = models.CharField(max_length=100, blank=True, null=True)
+    picture = models.ImageField(upload_to='profile_pics/', blank=True, null=True)
     birthdate = models.DateField()
 
     class Meta:
@@ -117,7 +117,6 @@ class Account(models.Model):
 class Contact(models.Model):
     client = models.ForeignKey(Client, on_delete=models.SET_NULL, null=True)
     number = models.CharField(max_length=20,  null=True, blank=True)
-    ramal = models.CharField(max_length=25,  null=True, blank=True)
     email = models.EmailField( null=True, blank=True)
     observation = models.CharField(max_length=50, null=True, blank=True)
 

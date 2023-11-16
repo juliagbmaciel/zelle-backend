@@ -20,6 +20,9 @@ from django_filters import rest_framework as filters
 from rest_framework import generics, status
 from django.utils import timezone
 from rest_framework.views import APIView
+from rest_framework.exceptions import ValidationError
+from django.shortcuts import get_object_or_404
+
 
 
 
@@ -30,12 +33,38 @@ class ClientViewSet(viewsets.ModelViewSet):
     def perform_create(self, serializer):
         serializer.save(user=self.request.user)
 
+    def list(self, request, *args, **kwargs):
+        queryset = self.filter_queryset(self.get_queryset())
+        print('queryset: ', queryset)
+
+        page = self.paginate_queryset(queryset)
+        if page is not None:
+            serializer = self.get_serializer(page, many=True)
+            return self.get_paginated_response(serializer.data)
+
+        serializer = self.get_serializer(queryset, many=True)
+        return Response(serializer.data)
 
     def get_queryset(self):
         client = Client.objects.filter(user=self.request.user).first()
         if client:
             return [client]
         return []
+    
+    def get_mine_queryset(self):
+        client = Client.objects.filter(user=self.request.user)
+        print(client)
+        if client:
+            return [client]
+        return []
+    
+    def get_object(self):
+        queryset = self.filter_queryset(self.get_mine_queryset())
+        obj = get_object_or_404(queryset[0])
+        self.check_object_permissions(self.request, obj)
+        return obj
+
+        
     
 class ClientPhysicalViewSet(viewsets.ModelViewSet):
     queryset = ClientPhysical.objects.all()
@@ -53,10 +82,13 @@ class ClientPhysicalViewSet(viewsets.ModelViewSet):
     
     def get_queryset(self):
         client = Client.objects.filter(user=self.request.user).first()
+        print('Hiii')
+        print(client)
         client_physical = ClientPhysical.objects.filter(client=client).first()
         if client_physical:
             return [client_physical]
-        return ["none"]
+        else: 
+            raise ValidationError(detail='Este cliente não é físico.')
 
 
 class ClientLegalViewSet(viewsets.ModelViewSet):
@@ -75,10 +107,12 @@ class ClientLegalViewSet(viewsets.ModelViewSet):
     
     def get_queryset(self):
         client = Client.objects.filter(user=self.request.user).first()
-        client_legal = ClientLegal.objects.filter(client=client)
+        client_legal = ClientLegal.objects.filter(client=client).first()
+        print(client_legal)
         if client_legal:
             return [client_legal]
-        return ["none"]
+        else: 
+            raise ValidationError(detail='Este cliente não é jurídico.')
 
 class AccountViewSet(viewsets.ModelViewSet):
     queryset = Account.objects.all()

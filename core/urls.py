@@ -13,7 +13,7 @@ from django.urls import path
 
 
 router = SimpleRouter()
-router.register('clients', ClientViewSet, basename='client')
+router.register('clients', ClientViewSet, basename='clients')
 router.register('client-physical', ClientPhysicalViewSet, basename='client-physical')
 router.register('client-legal', ClientLegalViewSet, basename='client-legal')
 router.register('accounts', AccountViewSet, basename='account')

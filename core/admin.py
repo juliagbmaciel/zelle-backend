@@ -64,7 +64,7 @@ class ClientLegalAdmin(admin.ModelAdmin):
 
 @admin.register(Contact)
 class ContactAdmin(admin.ModelAdmin):
-    list_display = ('client', 'number', 'ramal', 'email', 'observation')
+    list_display = ('client', 'number', 'email', 'observation')
 
 @admin.register(Address)
 class AddressAdmin(admin.ModelAdmin):
