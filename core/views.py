@@ -6,6 +6,7 @@ from .serializers import (ClientPhysicalSerializer,
                           CardSerializer,
                           LoanSerializer, 
                           LoanInstallmentSerializer,
+                          AddressSerializer
                           )
 from .models import (ClientPhysical, 
                      Client, 
@@ -14,6 +15,7 @@ from .models import (ClientPhysical,
                      Card, 
                      Loan, 
                      LoanInstallment,
+                     Address
                      )
 from rest_framework.response import Response
 from django_filters import rest_framework as filters
@@ -138,6 +140,11 @@ class CardViewSet(viewsets.ModelViewSet):
     filter_backends = (filters.DjangoFilterBackend,)
     filterset_fields = ('account',)
     search_fields = ('account')
+
+
+class AddressViewSet(viewsets.ModelViewSet):
+    serializer_class = AddressSerializer
+    queryset = Address.objects.all()
 
 
 class LoanViewSet(viewsets.ModelViewSet):

@@ -6,7 +6,8 @@ from .views import (ClientViewSet,
                     CardViewSet,
                     LoanViewSet,
                     PayInstallmentView,
-                    ClientDataView
+                    ClientDataView,
+                    AddressViewSet
                     )
 from django.urls import path
 
@@ -19,6 +20,7 @@ router.register('client-legal', ClientLegalViewSet, basename='client-legal')
 router.register('accounts', AccountViewSet, basename='account')
 router.register('cards', CardViewSet, basename='card' )
 router.register('loans', LoanViewSet, basename='loan')
+router.register('address', AddressViewSet, basename='address')
 
 
 
