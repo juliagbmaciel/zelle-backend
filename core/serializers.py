@@ -7,7 +7,8 @@ from .models import (User,
                      Account, 
                      Card, 
                      LoanInstallment,
-                     Address)
+                     Address,
+                     Contact)
 import random
 from django.utils import timezone
 from django.db.models.signals import post_save
@@ -325,6 +326,25 @@ class LoanInstallmentSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 
+
+class ContactSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = Contact
+        fields = '__all__'
+
+    def create(self, validated_data):
+        client = Client.objects.filter(user=self.context['request'].user).first()
+
+
+        validated_data['client'] = client
+
+        model_fields = [field.name for field in Contact._meta.get_fields()]
+        filtered_data = {key: value for key, value in validated_data.items() if key in model_fields}
+
+        instance = Contact.objects.create(**filtered_data)
+
+        return instance
 
 
 

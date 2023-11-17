@@ -117,7 +117,7 @@ class Account(models.Model):
 
 class Contact(models.Model):
     client = models.ForeignKey(Client, on_delete=models.SET_NULL, null=True)
-    number = models.CharField(max_length=20,  null=True, blank=True)
+    number = models.CharField(max_length=20)
     email = models.EmailField( null=True, blank=True)
     observation = models.CharField(max_length=50, null=True, blank=True)
 

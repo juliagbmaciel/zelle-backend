@@ -6,7 +6,8 @@ from .serializers import (ClientPhysicalSerializer,
                           CardSerializer,
                           LoanSerializer, 
                           LoanInstallmentSerializer,
-                          AddressSerializer
+                          AddressSerializer,
+                          ContactSerializer
                           )
 from .models import (ClientPhysical, 
                      Client, 
@@ -15,7 +16,8 @@ from .models import (ClientPhysical,
                      Card, 
                      Loan, 
                      LoanInstallment,
-                     Address
+                     Address,
+                     Contact
                      )
 from rest_framework.response import Response
 from django_filters import rest_framework as filters
@@ -29,7 +31,6 @@ from django.shortcuts import get_object_or_404
 
 
 class ClientViewSet(viewsets.ModelViewSet):
-    queryset = Client.objects.all()  
     serializer_class = ClientSerializer
 
     def perform_create(self, serializer):
@@ -69,7 +70,6 @@ class ClientViewSet(viewsets.ModelViewSet):
         
     
 class ClientPhysicalViewSet(viewsets.ModelViewSet):
-    queryset = ClientPhysical.objects.all()
     serializer_class = ClientPhysicalSerializer
 
         
@@ -84,7 +84,6 @@ class ClientPhysicalViewSet(viewsets.ModelViewSet):
     
     def get_queryset(self):
         client = Client.objects.filter(user=self.request.user).first()
-        print('Hiii')
         print(client)
         client_physical = ClientPhysical.objects.filter(client=client).first()
         if client_physical:
@@ -214,7 +213,6 @@ class ClientDataView(APIView):
 
             data["client"] = serializer.data
 
-            # Verifique se há uma conta associada ao cliente
             account = Account.objects.filter(client=client).first()
             if account:
                 account_serializer = AccountSerializer(account)
@@ -226,11 +224,16 @@ class ClientDataView(APIView):
 
 
 
+class ContactViewSet(viewsets.ModelViewSet):
+    serializer_class = ContactSerializer
+    
 
+    def get_queryset(self):
+        user = self.request.user
+        client = Client.objects.filter(user=user).first()
 
-
-
-
+        # Retorna o QuerySet diretamente
+        return Contact.objects.filter(client=client)
             
 
 
