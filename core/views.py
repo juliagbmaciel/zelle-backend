@@ -75,7 +75,6 @@ class ClientPhysicalViewSet(viewsets.ModelViewSet):
         
     def partial_update(self, request, *args, **kwargs):
         client_physical = ClientPhysical.objects.get(client__user=request.user)
-
         serializer = self.get_serializer(client_physical, data=request.data, partial=True)
         serializer.is_valid(raise_exception=True)
         serializer.save()

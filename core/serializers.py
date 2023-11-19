@@ -77,6 +77,9 @@ class ClientSerializer(serializers.ModelSerializer):
         
         return instance
 
+    
+
+
 
 
 class ClientPhysicalSerializer(serializers.ModelSerializer):
@@ -101,7 +104,8 @@ class ClientPhysicalSerializer(serializers.ModelSerializer):
             return client_physical
         else:
             raise serializers.ValidationError("Algo deu errado na criação do cliente.")
-
+    
+  
 
 
 class ClientLegalSerializer(serializers.ModelSerializer):
@@ -208,24 +212,7 @@ class AddressSerializer(serializers.ModelSerializer):
         address.save()
         return address
 
-"""
 
-            street = validated_data['street'],
-            neighborhood = validated_data['neighborhood'],
-            city = validated_data['city'],
-            state = validated_data['state'],
-            zip_code = validated_data['zip_code']
-class Address(models.Model):
-    street = models.CharField(max_length=100)
-    neighborhood = models.CharField(max_length=75)
-    city = models.CharField(max_length=75)
-    state = models.CharField(max_length=2)
-    zip_code = models.CharField(max_length=10)
-
-    def __str__(self):
-        return f"Cep {self.cep}"
-
-"""
 
 class CardSerializer(serializers.ModelSerializer):
 
