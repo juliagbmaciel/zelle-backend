@@ -57,7 +57,7 @@ class Client(models.Model):
     name = models.CharField(max_length=100, null=False)
     user = models.OneToOneField(get_user_model(), on_delete=models.CASCADE, blank=True, null=True)
     social_name = models.CharField(max_length=100, blank=True, null=True)
-    picture = models.ImageField(upload_to='profile_pics/', blank=True, null=True)
+    picture = models.FileField(upload_to='profile_pics/', blank=True, null=True)
     birthdate = models.DateField()
 
     class Meta:
