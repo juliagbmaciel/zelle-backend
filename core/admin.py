@@ -13,6 +13,7 @@ from .models import (
     Card,
     CardMovement,
     AccountMovement,
+    Transfer
     )
 
 
@@ -72,7 +73,7 @@ class AddressAdmin(admin.ModelAdmin):
 
 @admin.register(Card)
 class CardAdmin(admin.ModelAdmin):
-    list_display = ('account', 'number', 'cvv', 'expiration', 'banner', 'situation', 'limit')
+    list_display = ('account', 'number', 'cvv', 'expiration', 'banner', 'situation', 'limit', 'limit_available')
 
 @admin.register(CardMovement)
 class CardMovementAdmin(admin.ModelAdmin):
@@ -84,16 +85,9 @@ class AccountMovementAdmin(admin.ModelAdmin):
     list_display = ('account', 'date_time', 'operation', 'value')
 
 
-# @admin.register(CardBill)
-# class CardBillAdmin(admin.ModelAdmin):
-#     list_display = ('id', 'card', 'value', 'value')
-    
 
-    """
-    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    card = models.ForeignKey(Card, on_delete=models.CASCADE)
-    value = models.CharField(max_length=300)
-    available_value = models.CharField(max_length=300)
-    due_date = models.DateField()
-    closing_date = models.DateField()
-"""
+@admin.register(Transfer)
+class TransferAdmin(admin.ModelAdmin):
+    list_display = ('type', 'value', 'account_sender', 'card_sender', 'date', 'account_receiver')
+
+
