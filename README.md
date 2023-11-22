@@ -59,7 +59,7 @@ To use it, follow these steps:
 python manage.py runserver
 ```
 
-If you want to see de docs (the endpoints can be confuse if you dont) open at your browser after runserver:
+## If you want to see de docs (the endpoints can be confuse if you dont) open at your browser after runserver:
 
 `api/v1/schema/docs/`
 
