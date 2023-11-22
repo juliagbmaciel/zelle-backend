@@ -8,7 +8,9 @@ from .views import (ClientViewSet,
                     PayInstallmentView,
                     ClientDataView,
                     AddressViewSet,
-                    ContactViewSet
+                    ContactViewSet,
+                    ClientByCPFView,
+                    TransferView
                     )
 
 from django.urls import path
@@ -31,6 +33,8 @@ urlpatterns = [
     path('pay-installments/<int:pk>', PayInstallmentView.as_view(), name='pay-loan'),
     path('view-installments', PayInstallmentView.as_view(), name='view-loan-installments'),
     path('client-all', ClientDataView.as_view(), name='client-data-all'),
+    path('client/by-cpf/', ClientByCPFView.as_view(), name='client-by-cpf'),
+    path('transfer/', TransferView.as_view(), name='transfer-to-account'),
 ]
 
 
