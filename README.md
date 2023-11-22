@@ -16,8 +16,8 @@ The project is still under development, with some improvements missing, includin
 
 Before start, verify if you have the following requirements
 
-- You have installed `<python>`
-- Your operating system is `< Windows >`
+- You have installed `python`
+- Your operating system is `Windows` (still not tested on Linux)
 
 ## 🚀 Installing zelle-backend
 
