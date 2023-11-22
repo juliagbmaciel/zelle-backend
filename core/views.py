@@ -7,7 +7,8 @@ from .serializers import (ClientPhysicalSerializer,
                           LoanSerializer, 
                           LoanInstallmentSerializer,
                           AddressSerializer,
-                          ContactSerializer
+                          ContactSerializer,
+                          TransferSerializer
                           )
 from .models import (ClientPhysical, 
                      Client, 
@@ -17,7 +18,9 @@ from .models import (ClientPhysical,
                      Loan, 
                      LoanInstallment,
                      Address,
-                     Contact
+                     Contact,
+                     User,
+                     Transfer
                      )
 from rest_framework.response import Response
 from django_filters import rest_framework as filters
@@ -150,7 +153,6 @@ class LoanViewSet(viewsets.ModelViewSet):
     queryset = Loan.objects.all()
 
     def perform_create(self, serializer):
-        print("vamos de perform")
         serializer.save()
 
 """
@@ -231,7 +233,6 @@ class ContactViewSet(viewsets.ModelViewSet):
         user = self.request.user
         client = Client.objects.filter(user=user).first()
 
-        # Retorna o QuerySet diretamente
         return Contact.objects.filter(client=client)
             
 
@@ -239,3 +240,132 @@ class ContactViewSet(viewsets.ModelViewSet):
 
 
 
+class ClientByCPFView(APIView):
+    def get(self, request):
+        cpf = request.query_params.get('cpf', None)
+        print(cpf)
+        if not cpf:
+            return Response({'error': 'CPF or CNPJ parameter is required'}, status=status.HTTP_400_BAD_REQUEST)
+        try:
+
+            try:
+                user = User.objects.get(cpf=cpf)
+            except:
+                return Response({"detail": "Cliente não encontrado."}, status=404)
+
+            client = Client.objects.get(user=user)
+            data = {"client": None, "account": None}
+
+            if hasattr(client, 'clientphysical'):
+                serializer = ClientPhysicalSerializer(client.clientphysical)
+            elif hasattr(client, 'clientlegal'):
+                serializer = ClientLegalSerializer(client.clientlegal)
+            else:
+                return Response({"detail": "Cliente não encontrado."}, status=404)
+
+            data["client"] = serializer.data
+
+            account = Account.objects.filter(client=client).first()
+            if account:
+                account_serializer = AccountSerializer(account)
+                data["account"] = account_serializer.data
+
+            return Response(data)
+        except Client.DoesNotExist:
+            return Response({"detail": "Cliente não encontrado."}, status=404)
+
+
+
+class TransferView(APIView):
+    def post(self, request):
+        receiver_cpf = request.query_params.get('cpf', None)
+        amount = request.data.get('amount')
+        type = request.data.get('type')
+        sender_user = request.user
+        sender_client = Client.objects.get(user=sender_user)
+
+        try:
+            receiver_user = User.objects.get(cpf=receiver_cpf)
+        except:
+            return Response({'error': 'Conta não encontrada'}, status=status.HTTP_404_NOT_FOUND)
+        receiver_client = Client.objects.get(user=receiver_user)
+        receiver_account = Account.objects.get(client=receiver_client)
+        sender_account = Account.objects.get(client=sender_client)
+
+
+        if receiver_account == sender_account:
+            return Response({'error': 'Conta de destino e origem não podem ser as mesmas.'}, status=status.HTTP_404_NOT_FOUND)
+
+        if type == 'conta':
+            try:
+                
+                if sender_account.balance >= amount:
+                    sender_account.balance -= amount
+                    receiver_account.balance += amount
+
+                    sender_account.save()
+                    receiver_account.save()
+
+                    transfer_data = {
+                        'type': 'conta',
+                        'value': amount,
+                        'account_sender': sender_account.id,
+                        'account_receiver': receiver_account.id
+                    }
+                    transfer_serializer = TransferSerializer(data=transfer_data)
+                    if transfer_serializer.is_valid():
+                        transfer_serializer.save()
+
+                    return Response({'message': 'Transferencia realizada com sucesso'}, status=status.HTTP_200_OK)
+                else:
+                    return Response({'error': 'Saldo insuficiente'}, status=status.HTTP_400_BAD_REQUEST)
+
+            except Account.DoesNotExist:
+                return Response({'error': 'Conta não encontrada'}, status=status.HTTP_404_NOT_FOUND)
+            
+        elif type == 'cartao':
+            try:
+                try:
+                    card = Card.objects.get(account=sender_account)
+                except:
+                     return Response({'error': 'Esta conta não possui cartão de crédito'}, status=status.HTTP_400_BAD_REQUEST)
+                print(card)
+                if card.limit_available >= amount:
+                    card.limit_available -= amount
+                    receiver_account.balance += amount
+
+                    card.save()
+                    receiver_account.save()
+
+                    transfer_data = {
+                        'type': 'cartao',
+                        'value': amount,
+                        'card': card.id,
+                        'account_receiver': receiver_account.id
+                    }
+                    transfer_serializer = TransferSerializer(data=transfer_data)
+                    if transfer_serializer.is_valid():
+                        transfer_serializer.save()
+
+                    return Response({'message': 'Transferencia realizada com sucesso'}, status=status.HTTP_200_OK)                  
+                else:
+                    return Response({'error': 'Saldo insuficiente no cartão'}, status=status.HTTP_400_BAD_REQUEST)
+
+            except Account.DoesNotExist:
+                return Response({'error': 'Conta não encontrada'}, status=status.HTTP_404_NOT_FOUND)
+
+
+    def get(self, request):
+        user = request.user
+        client = Client.objects.get(user=user)
+        account = Account.objects.get(client=client)
+
+
+        try:
+            transfers = Transfer.objects.filter(account_sender = account).all()
+            if len(transfers) == 0:
+                return Response({'error':  'Nenhuma transferência por aqui...' }, status=status.HTTP_404_NOT_FOUND)
+            serializer = TransferSerializer(transfers, many=True)
+            return Response(serializer.data)
+        except:
+            return Response({'error':  'seila' }, status=status.HTTP_404_NOT_FOUND)
