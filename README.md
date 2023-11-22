@@ -9,7 +9,7 @@ The project is still under development, with some improvements missing, includin
 - [ ] Create a populate to database
 - [ ] Finish the Transfer APIView
 - [ ] Finish the card bill APIView
-- [ ] Create a swagger for better visualization of endpoints
+- [x] Create a swagger for better visualization of endpoints
 - [ ] Create a real documentation
 
 ## 💻 Requirements:
@@ -58,6 +58,11 @@ To use it, follow these steps:
 ```
 python manage.py runserver
 ```
+
+If you want to see de docs (the endpoints can be confuse if you dont) open at your browser after runserver:
+
+`api/v1/schema/docs/`
+
 
 A reminder: it's not ready yet, in the future the installation and usage codes will be different, wait for changes.
 
