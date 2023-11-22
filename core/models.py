@@ -102,7 +102,7 @@ class Account(models.Model):
     agency = models.CharField(max_length=10)
     number = models.CharField(max_length=25, null=False)
     type = models.CharField(max_length=20, null=True)
-    client = models.ManyToManyField('Client', null=True)
+    client = models.ManyToManyField('Client')
     limit = models.DecimalField(max_digits=20, decimal_places=2)
     active = models.BooleanField()
 
@@ -117,7 +117,7 @@ class Account(models.Model):
 
 class Contact(models.Model):
     client = models.ForeignKey(Client, on_delete=models.SET_NULL, null=True)
-    number = models.CharField(max_length=20)
+    number = models.CharField(max_length=20, null=True)
     email = models.EmailField( null=True, blank=True)
     observation = models.CharField(max_length=50, null=True, blank=True)
 
@@ -184,6 +184,7 @@ class Card(models.Model):
     banner = models.CharField(max_length=20, null=True)
     situation = models.CharField(max_length=20, null=True)
     limit = models.DecimalField(max_digits=20, decimal_places=2, default=0, null=True)
+    limit_available = models.DecimalField(max_digits=20, decimal_places=2, default=0, null=True)
 
     class Meta:
         verbose_name = "Card"
@@ -236,3 +237,20 @@ class AccountMovement(models.Model):
     
     def __str__(self):
         return f"Valor de {self.value} na conta com n° {self.account}"
+
+
+class Transfer(models.Model):
+    TYPE_CHOICES = [
+        ('conta', 'Conta'),
+        ('cartao', 'Cartão de Crédito'),
+    ]
+
+    type = models.CharField(max_length=10, choices=TYPE_CHOICES)
+    value = models.DecimalField(max_digits=10, decimal_places=2)
+    account_sender = models.ForeignKey('Account', on_delete=models.CASCADE, blank=True, null=True)
+    card_sender = models.ForeignKey('Card', on_delete=models.CASCADE, blank=True, null=True)
+    date = models.DateTimeField(auto_now_add=True)
+    account_receiver = models.ForeignKey('Account', on_delete=models.CASCADE, blank=True, null=True, related_name='receiver')
+
+    def __str__(self):
+        return f"Transferência - Tipo: {self.type}, Valor: {self.value}"
