@@ -32,7 +32,6 @@ from django.shortcuts import get_object_or_404
 
 
 
-
 class ClientViewSet(viewsets.ModelViewSet):
     serializer_class = ClientSerializer
 
