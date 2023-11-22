@@ -8,7 +8,8 @@ from .models import (User,
                      Card, 
                      LoanInstallment,
                      Address,
-                     Contact)
+                     Contact,
+                     Transfer)
 import random
 from django.utils import timezone
 from django.db.models.signals import post_save
@@ -226,8 +227,11 @@ class CardSerializer(serializers.ModelSerializer):
         print(account)
         
 
-        if not account.active:
-            raise serializers.ValidationError("Criação de cartão não autorizada", code="unauthorized")
+        if not account.active or account.balance < 500:
+            raise serializers.ValidationError("Criação de cartão não autorizada pois o saldo é insuficiente", code="unauthorized")
+
+        if Card.objects.filter(account=account):
+            raise serializers.ValidationError("Criação de cartão não autorizada pois já existe um cartão vinculado a esta conta", code="unauthorized")
 
         while True:
             generated_number = " ".join(["".join(random.choices("0123456789", k=4)) for _ in range(4)])
@@ -247,7 +251,8 @@ class CardSerializer(serializers.ModelSerializer):
             banner=banner,
             situation=situation,
             expiration=expiration.date(),
-            limit=limit
+            limit=limit,
+            limit_available=limit
         )
 
         card.save()
@@ -333,7 +338,13 @@ class ContactSerializer(serializers.ModelSerializer):
 
         return instance
 
+class TransferSerializer(serializers.ModelSerializer):
 
+    class Meta:
+        model = Transfer
+        fields ='__all__'
+
+    
 
 
 
