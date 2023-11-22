@@ -31,6 +31,10 @@ git clone https://github.com/juliagbmaciel/zelle-backend.git
 ```
 
 ```
+cd zelle-backend
+```
+
+```
 python -m venv venv
 ```
 
