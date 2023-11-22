@@ -24,7 +24,7 @@ Before start, verify if you have the following requirements
 To install, follow these steps:
 
 
-Windows:
+Windows (cmd):
 
 ```
 git clone https://github.com/juliagbmaciel/zelle-backend.git
@@ -36,6 +36,11 @@ cd zelle-backend
 
 ```
 python -m venv venv
+```
+
+To open the code at vscode (or open at Pycharm if you use it)
+```
+code .
 ```
 
 ```
