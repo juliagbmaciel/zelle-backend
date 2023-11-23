@@ -286,14 +286,14 @@ class TransferView(APIView):
         try:
             receiver_user = User.objects.get(cpf=receiver_cpf)
         except:
-            return Response({'error': 'Conta não encontrada'}, status=status.HTTP_404_NOT_FOUND)
+            return Response({'detail': 'Conta não encontrada'}, status=status.HTTP_404_NOT_FOUND)
         receiver_client = Client.objects.get(user=receiver_user)
         receiver_account = Account.objects.get(client=receiver_client)
         sender_account = Account.objects.get(client=sender_client)
 
 
         if receiver_account == sender_account:
-            return Response({'error': 'Conta de destino e origem não podem ser as mesmas.'}, status=status.HTTP_404_NOT_FOUND)
+            return Response({'detail': 'Conta de destino e origem não podem ser as mesmas.'}, status=status.HTTP_404_NOT_FOUND)
 
         if type == 'conta':
             try:
@@ -317,17 +317,17 @@ class TransferView(APIView):
 
                     return Response({'message': 'Transferencia realizada com sucesso'}, status=status.HTTP_200_OK)
                 else:
-                    return Response({'error': 'Saldo insuficiente'}, status=status.HTTP_400_BAD_REQUEST)
+                    return Response({'detail': 'Saldo insuficiente'}, status=status.HTTP_400_BAD_REQUEST)
 
             except Account.DoesNotExist:
-                return Response({'error': 'Conta não encontrada'}, status=status.HTTP_404_NOT_FOUND)
+                return Response({'detail': 'Conta não encontrada'}, status=status.HTTP_404_NOT_FOUND)
             
         elif type == 'cartao':
             try:
                 try:
                     card = Card.objects.get(account=sender_account)
                 except:
-                     return Response({'error': 'Esta conta não possui cartão de crédito'}, status=status.HTTP_400_BAD_REQUEST)
+                     return Response({'detail': 'Esta conta não possui cartão de crédito'}, status=status.HTTP_400_BAD_REQUEST)
                 print(card)
                 if card.limit_available >= amount:
                     card.limit_available -= amount
@@ -342,29 +342,40 @@ class TransferView(APIView):
                         'card': card.id,
                         'account_receiver': receiver_account.id
                     }
+
                     transfer_serializer = TransferSerializer(data=transfer_data)
                     if transfer_serializer.is_valid():
                         transfer_serializer.save()
 
                     return Response({'message': 'Transferencia realizada com sucesso'}, status=status.HTTP_200_OK)                  
                 else:
-                    return Response({'error': 'Saldo insuficiente no cartão'}, status=status.HTTP_400_BAD_REQUEST)
+                    return Response({'detail': 'Saldo insuficiente no cartão'}, status=status.HTTP_400_BAD_REQUEST)
 
             except Account.DoesNotExist:
-                return Response({'error': 'Conta não encontrada'}, status=status.HTTP_404_NOT_FOUND)
+                return Response({'detail': 'Conta não encontrada'}, status=status.HTTP_404_NOT_FOUND)
 
 
     def get(self, request):
         user = request.user
         client = Client.objects.get(user=user)
         account = Account.objects.get(client=client)
+        type = request.query_params.get('type', None)
 
-
-        try:
-            transfers = Transfer.objects.filter(account_sender = account).all()
-            if len(transfers) == 0:
-                return Response({'error':  'Nenhuma transferência por aqui...' }, status=status.HTTP_404_NOT_FOUND)
-            serializer = TransferSerializer(transfers, many=True)
-            return Response(serializer.data)
-        except:
-            return Response({'error':  'seila' }, status=status.HTTP_404_NOT_FOUND)
+        if type == 'sended':
+            try:
+                transfers = Transfer.objects.filter(account_sender = account).all()
+                if len(transfers) == 0:
+                    return Response({'detail':  'Nenhuma transferência por aqui...' }, status=status.HTTP_404_NOT_FOUND)
+                serializer = TransferSerializer(transfers, many=True)
+                return Response(serializer.data)
+            except:
+                return Response(status=status.HTTP_404_NOT_FOUND)
+        elif type == 'received':
+            try:
+                transfers = Transfer.objects.filter(account_receiver = account).all()
+                if len(transfers) == 0:
+                    return Response({'detail':  'Nenhuma transferência por aqui...' }, status=status.HTTP_404_NOT_FOUND)
+                serializer = TransferSerializer(transfers, many=True)
+                return Response(serializer.data)
+            except:
+                return Response(status=status.HTTP_404_NOT_FOUND)
