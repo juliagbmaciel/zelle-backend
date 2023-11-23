@@ -339,10 +339,21 @@ class ContactSerializer(serializers.ModelSerializer):
         return instance
 
 class TransferSerializer(serializers.ModelSerializer):
+    client_sender = serializers.SerializerMethodField()
+    client_receiver = serializers.SerializerMethodField()
 
     class Meta:
         model = Transfer
         fields ='__all__'
+
+    def get_client_sender(self, obj):
+        for client in obj.account_sender.client.all():
+           return client.name
+
+
+    def get_client_receiver(self, obj):
+        for client in obj.account_receiver.client.all():
+            return client.name
 
     
 
