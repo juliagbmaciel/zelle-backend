@@ -347,13 +347,16 @@ class TransferSerializer(serializers.ModelSerializer):
         fields ='__all__'
 
     def get_client_sender(self, obj):
-        for client in obj.account_sender.client.all():
-           return client.name
-
+        account_sender = obj.account_sender
+        if account_sender and account_sender.client.exists():
+            return account_sender.client.first().name
+        return None
 
     def get_client_receiver(self, obj):
-        for client in obj.account_receiver.client.all():
-            return client.name
+        account_receiver = obj.account_receiver
+        if account_receiver and account_receiver.client.exists():
+            return account_receiver.client.first().name
+        return None
 
     
 
