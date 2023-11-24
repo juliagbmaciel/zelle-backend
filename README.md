@@ -7,7 +7,7 @@
 The project is still under development, with some improvements missing, including:
 
 - [ ] Create a populate to database
-- [ ] Finish the Transfer APIView
+- [x] Finish the Transfer APIView
 - [ ] Finish the card bill APIView
 - [x] Create a swagger for better visualization of endpoints
 - [ ] Create a real documentation
