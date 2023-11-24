@@ -1,4 +1,5 @@
 from rest_framework import viewsets
+from django.db.models import Q
 from .serializers import (ClientPhysicalSerializer, 
                           ClientSerializer, 
                           ClientLegalSerializer, 
@@ -24,6 +25,7 @@ from .models import (ClientPhysical,
                      )
 from rest_framework.response import Response
 from django_filters import rest_framework as filters
+from decimal import Decimal
 from rest_framework import generics, status
 from django.utils import timezone
 from rest_framework.views import APIView
@@ -313,6 +315,7 @@ class TransferView(APIView):
                     }
                     transfer_serializer = TransferSerializer(data=transfer_data)
                     if transfer_serializer.is_valid():
+                        print('is valid')
                         transfer_serializer.save()
 
                     return Response({'message': 'Transferencia realizada com sucesso'}, status=status.HTTP_200_OK)
@@ -328,9 +331,10 @@ class TransferView(APIView):
                     card = Card.objects.get(account=sender_account)
                 except:
                      return Response({'detail': 'Esta conta não possui cartão de crédito'}, status=status.HTTP_400_BAD_REQUEST)
-                print(card)
+                
                 if card.limit_available >= amount:
-                    card.limit_available -= amount
+                    print('limite disponivel')
+                    card.limit_available -= Decimal(amount)
                     receiver_account.balance += amount
 
                     card.save()
@@ -339,12 +343,14 @@ class TransferView(APIView):
                     transfer_data = {
                         'type': 'cartao',
                         'value': amount,
-                        'card': card.id,
+                        'account_sender': sender_account.id,
+                        'card_sender': card.id,
                         'account_receiver': receiver_account.id
                     }
 
                     transfer_serializer = TransferSerializer(data=transfer_data)
                     if transfer_serializer.is_valid():
+                        print('is valid', sender_account)
                         transfer_serializer.save()
 
                     return Response({'message': 'Transferencia realizada com sucesso'}, status=status.HTTP_200_OK)                  
@@ -353,6 +359,8 @@ class TransferView(APIView):
 
             except Account.DoesNotExist:
                 return Response({'detail': 'Conta não encontrada'}, status=status.HTTP_404_NOT_FOUND)
+        
+
 
 
     def get(self, request):
@@ -362,6 +370,7 @@ class TransferView(APIView):
         type = request.query_params.get('type', None)
 
         if type == 'sended':
+            print('sened')
             try:
                 transfers = Transfer.objects.filter(account_sender = account).all()
                 if len(transfers) == 0:
@@ -379,3 +388,13 @@ class TransferView(APIView):
                 return Response(serializer.data)
             except:
                 return Response(status=status.HTTP_404_NOT_FOUND)
+        elif type == 'all':
+            transfers = Transfer.objects.filter(
+                Q(account_sender=account) | Q(account_receiver=account)
+            ).order_by('-date')  
+
+            if not transfers.exists():
+                return Response({'detail': 'Nenhuma transferência por aqui...'}, status=status.HTTP_404_NOT_FOUND)
+
+            serializer = TransferSerializer(transfers, many=True)
+            return Response(serializer.data)
