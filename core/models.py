@@ -102,7 +102,7 @@ class Account(models.Model):
     agency = models.CharField(max_length=10)
     number = models.CharField(max_length=25, null=False)
     type = models.CharField(max_length=20, null=True)
-    client = models.ManyToManyField('Client')
+    client = models.ManyToManyField('Client',  null=True)
     limit = models.DecimalField(max_digits=20, decimal_places=2)
     active = models.BooleanField()
 
