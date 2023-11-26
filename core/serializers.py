@@ -158,7 +158,7 @@ class AccountSerializer(serializers.ModelSerializer):
         default_limit = 1000000000000
         default_active = True
 
-        account_type = validated_data.get('type', '')
+        account_type = validated_data.get('type', 'Conta Corrente')
 
         client_ids = validated_data.get('client', [])
 
