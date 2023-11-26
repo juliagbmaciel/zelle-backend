@@ -398,3 +398,5 @@ class TransferView(APIView):
 
             serializer = TransferSerializer(transfers, many=True)
             return Response(serializer.data)
+        else:
+            return Response({"message": "Opa, esse endpoint só funciona adicionando um query param (?type), sendo eles (all, sended, received)"})
