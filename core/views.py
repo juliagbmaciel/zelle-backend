@@ -31,6 +31,14 @@ from django.utils import timezone
 from rest_framework.views import APIView
 from rest_framework.exceptions import ValidationError
 from django.shortcuts import get_object_or_404
+from django.contrib.auth.models import AbstractUser
+from django.db import models
+from django.contrib.auth.signals import user_logged_in
+from django.dispatch import receiver
+from django.utils import timezone
+
+
+
 
 
 
@@ -398,5 +406,17 @@ class TransferView(APIView):
 
             serializer = TransferSerializer(transfers, many=True)
             return Response(serializer.data)
+        elif type == 'cartao': 
+            try:
+                transfers = Transfer.objects.filter(account_sender=account,card_sender__isnull=False).all()
+                if len(transfers) == 0:
+                    return Response({'detail': 'Nenhuma transferência por aqui...'}, status=status.HTTP_404_NOT_FOUND)
+                serializer = TransferSerializer(transfers, many=True)
+                return Response(serializer.data)
+            except:
+                return Response(status=status.HTTP_404_NOT_FOUND)
         else:
             return Response({"message": "Opa, esse endpoint só funciona adicionando um query param (?type), sendo eles (all, sended, received)"})
+        
+
+

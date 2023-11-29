@@ -116,7 +116,15 @@ REST_FRAMEWORK = {
     'DEFAULT_PERMISSION_CLASSES': [
         'rest_framework.permissions.IsAuthenticated',
     ],
-    'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema'
+    'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema', 
+    'DEFAULT_THROTTLE_CLASSES': [
+        'rest_framework.throttling.AnonRateThrottle',
+        'rest_framework.throttling.UserRateThrottle'
+    ],
+    'DEFAULT_THROTTLE_RATES': {
+        'anon': '3/min',
+        'user': '100/min'
+    }
 }
 
 SPECTACULAR_SETTINGS = {
@@ -126,6 +134,9 @@ SPECTACULAR_SETTINGS = {
 DJOSER = {
     'SERIALIZERS': {
         'user': 'core.serializers.UserSerializer',
+    },
+    'VIEWS': {
+        'login': 'core.views.CustomLoginView',
     },
 
 }
@@ -152,6 +163,7 @@ MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
 STATIC_URL = 'static/'
+
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/4.2/ref/settings/#default-auto-field

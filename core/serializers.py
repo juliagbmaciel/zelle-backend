@@ -12,9 +12,15 @@ from .models import (User,
                      Transfer)
 import random
 from django.utils import timezone
+from threading import Thread
 from django.db.models.signals import post_save
 from .signals import loan_installment_signal 
 from rest_framework.exceptions import ValidationError
+from django.db import transaction
+from django.utils import timezone
+from django.db import transaction
+import time
+
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -150,8 +156,6 @@ class AccountSerializer(serializers.ModelSerializer):
         fields = '__all__'
         read_only_fields = ('agency', 'limit', 'active', 'number')
 
-
-
     def create(self, validated_data):
         default_balance = 0
         default_agency = random.choice(["0917-2", "0918-3", "0919-4", "0920-5", "0921-6"])
@@ -180,11 +184,26 @@ class AccountSerializer(serializers.ModelSerializer):
             limit=default_limit,
             active=default_active,
             type=account_type,
-            number=create_number_account()
+            number=create_number_account(),
+            approved="Em aprovação"  
         )
+
         account.client.set(client_ids)
 
+        t = Thread(target=self.schedule_approval, args=(account.id,))
+        t.start()
+
         return account
+
+    def schedule_approval(self, account_id):
+        print(f"Aguardando 3 minutos para aprovação...")
+        time.sleep(180)
+
+        with transaction.atomic():
+            account = Account.objects.select_for_update().get(id=account_id)
+            account.approved = "Aprovado"
+            account.save()
+            print(f"Conta {account_id} aprovada!")
 
 
 def create_number_account():
@@ -299,7 +318,8 @@ class LoanSerializer(serializers.ModelSerializer):
             )
             post_save.connect(loan_installment_signal, sender=Loan)
             loan.save()
-            
+            account.balance += float(amount_requested)
+            account.save()
             return loan
     
     def get_queryset(self):

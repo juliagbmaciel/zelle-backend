@@ -7,6 +7,7 @@ import uuid
 
 
 
+
 class CustomUserManager(BaseUserManager):
     def create_user(self, cpf, password, **extra_fields):
         user = self.model(cpf=cpf, **extra_fields)
@@ -105,6 +106,7 @@ class Account(models.Model):
     client = models.ManyToManyField('Client',  null=True)
     limit = models.DecimalField(max_digits=20, decimal_places=2)
     active = models.BooleanField()
+    approved = models.CharField(max_length=60, null=True)
 
     class Meta:
         verbose_name = "Account"

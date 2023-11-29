@@ -1,8 +1,10 @@
-from django.db.models.signals import post_save, pre_save
+from django.db.models.signals import post_save
 from django.dispatch import receiver
 from .models import Loan, LoanInstallment
 from datetime import timedelta
 from decimal import Decimal
+
+
 
 
 @receiver(post_save, sender=Loan)
@@ -26,5 +28,6 @@ def loan_installment_signal(sender, instance, **kwargs):
                 amount_paid=None
             )
             due_date += timedelta(days=30)
+
 
 
