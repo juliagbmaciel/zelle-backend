@@ -31,7 +31,7 @@ router.register('contacts', ContactViewSet, basename='contacts')
 
 urlpatterns = [
     path('pay-installments/<int:pk>', PayInstallmentView.as_view(), name='pay-loan'),
-    path('view-installments', PayInstallmentView.as_view(), name='view-loan-installments'),
+    path('view-installments/', PayInstallmentView.as_view(), name='view-loan-installments'),
     path('client-all', ClientDataView.as_view(), name='client-data-all'),
     path('client/by-cpf/', ClientByCPFView.as_view(), name='client-by-cpf'),
     path('transfer/', TransferView.as_view(), name='transfer-to-account'),

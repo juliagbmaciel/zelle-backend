@@ -303,7 +303,7 @@ class LoanSerializer(serializers.ModelSerializer):
             post_save.connect(loan_installment_signal, sender=Loan)
             loan.save()
 
-            raise serializers.ValidationError("Conta não atende os requisitos para realização de emprestimo", code="unauthorized")
+            raise serializers.ValidationError("Conta não atende os requisitos para realização de emprestimo, requisitos básicos: no mínimo R$ 1.000,00 em conta corrente", code="unauthorized")
         
         else:
        

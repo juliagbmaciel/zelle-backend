@@ -193,7 +193,7 @@ class PayInstallmentView(generics.UpdateAPIView, generics.ListAPIView):
         return Response({"detail": "Pagamento da parcela efetuado com sucesso."}, status=status.HTTP_200_OK)
     
     def get_queryset(self):
-        loan = self.request.data['loan']
+        loan = self.request.GET.get('loan')
         print(loan)
         if loan:
             return LoanInstallment.objects.filter(loan=loan).all()
@@ -409,6 +409,16 @@ class TransferView(APIView):
         elif type == 'cartao': 
             try:
                 transfers = Transfer.objects.filter(account_sender=account,card_sender__isnull=False).all()
+                if len(transfers) == 0:
+                    return Response({'detail': 'Nenhuma transferência por aqui...'}, status=status.HTTP_404_NOT_FOUND)
+                serializer = TransferSerializer(transfers, many=True)
+                return Response(serializer.data)
+            except:
+                return Response(status=status.HTTP_404_NOT_FOUND)
+        elif type == 'conta': 
+            print('hi')
+            try:
+                transfers = Transfer.objects.filter(account_sender=account,card_sender__isnull=True).all()
                 if len(transfers) == 0:
                     return Response({'detail': 'Nenhuma transferência por aqui...'}, status=status.HTTP_404_NOT_FOUND)
                 serializer = TransferSerializer(transfers, many=True)
